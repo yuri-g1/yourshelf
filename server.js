@@ -1,0 +1,34 @@
+const express = require("express");
+const connectDatabase = require("./src/config/db");
+const usersRouter = require("./src/routes/users");
+const shelfRouter = require("./src/routes/shelf");
+const friendshipRouter = require("./src/routes/friendship");
+const errorHandler = require("./src/middlewares/errorHandler");
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(express.json());
+app.use(usersRouter);
+app.use(shelfRouter);
+app.use(friendshipRouter);
+
+app.use((req, res) => {
+  res.status(404).json({ error: "Route not found" });
+});
+
+app.use(errorHandler);
+
+async function start() {
+  try {
+    await connectDatabase();
+    app.listen(PORT, () => {
+      console.log(`Server running at http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Could not start the server:", error.message);
+    process.exit(1);
+  }
+}
+
+start();

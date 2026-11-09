@@ -1,0 +1,16 @@
+# Secrets
+.env
+
+.env.local
+
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+
+# Local learning notes
+.vibe-wise/
+
+# Local editor and tool config
+.claude/

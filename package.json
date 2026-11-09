@@ -1,0 +1,21 @@
+{
+  "name": "yourshelf-api",
+  "version": "1.0.0",
+  "description": "REST API for yourshelf: one shelf for the media you love, where friends can leave recommendations. Movies today, games and albums next.",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=.env server.js",
+    "start": "node --env-file-if-exists=.env server.js"
+  },
+  "keywords": ["express", "mongoose", "mongodb", "rest-api", "movies", "games", "music", "media"],
+  "author": "yuri-g1",
+  "license": "MIT",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=22.9"
+  },
+  "dependencies": {
+    "express": "^5.3.0",
+    "mongoose": "^9.11.4"
+  }
+}

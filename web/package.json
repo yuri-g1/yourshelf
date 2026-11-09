@@ -1,0 +1,18 @@
+{
+  "name": "yourshelf-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Next.js frontend for yourshelf, a shelf for movies, games and albums. Currently running in demo mode.",
+  "author": "yuri-g1",
+  "license": "MIT",
+  "scripts": {
+    "dev": "next dev -p 3001",
+    "build": "next build",
+    "start": "next start -p 3001"
+  },
+  "dependencies": {
+    "next": "^16.4.6",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  }
+}
