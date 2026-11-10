@@ -240,7 +240,12 @@ export default function ShelfView({ userId }) {
               onSubmit={(form) =>
                 api(`/shelf/${ownerId}/movie`, {
                   method: "POST",
-                  body: { title: form.title, desc: form.desc },
+                  body: {
+                    title: form.title,
+                    desc: form.desc,
+                    externalId: form.externalId,
+                    posterPath: form.posterPath,
+                  },
                 }).then(load)
               }
             />
@@ -260,6 +265,8 @@ export default function ShelfView({ userId }) {
                   body: {
                     title: form.title,
                     desc: form.desc,
+                    externalId: form.externalId,
+                    posterPath: form.posterPath,
                     recommendationText: form.note,
                   },
                 }).then(() => {

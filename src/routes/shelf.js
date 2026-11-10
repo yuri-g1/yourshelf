@@ -4,15 +4,50 @@ const User = require("../models/User");
 const Relationship = require("../models/Relationship");
 const { identifyUser, optionalUser } = require("../middlewares/IdentifyUser");
 const { writeLimit } = require("../middlewares/rateLimiting");
+const tmdb = require("../lib/tmdb");
 
 const router = express.Router();
 
+const LIVE_BATCH_SIZE = 10;
+
 function pickMovieFields(body) {
   return {
-    externalId: body?.externalId,
+    externalId: body?.externalId || undefined,
     title: body?.title,
     desc: body?.desc,
+    posterPath: body?.posterPath || undefined,
   };
+}
+
+async function withLiveData(movie) {
+  const stored = movie.toObject();
+
+  if (!stored.externalId || !tmdb.isConfigured()) return stored;
+
+  try {
+    const live = await tmdb.getMovie(stored.externalId);
+
+    return {
+      ...stored,
+      title: live.title || stored.title,
+      desc: live.desc || stored.desc,
+      posterPath: live.posterPath || stored.posterPath,
+      year: live.year,
+    };
+  } catch {
+    return stored;
+  }
+}
+
+async function loadLiveMovies(movies) {
+  const result = [];
+
+  for (let i = 0; i < movies.length; i += LIVE_BATCH_SIZE) {
+    const batch = movies.slice(i, i + LIVE_BATCH_SIZE);
+    result.push(...(await Promise.all(batch.map(withLiveData))));
+  }
+
+  return result;
 }
 
 function isOwner(req) {
@@ -52,7 +87,7 @@ router.get("/shelf/:id", optionalUser, async (req, res) => {
     });
   }
 
-  const movies = user.shelf?.movies ?? [];
+  const movies = await loadLiveMovies(user.shelf?.movies ?? []);
 
   return res.json({
     owner: { _id: user._id, name: user.name },

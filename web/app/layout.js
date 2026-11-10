@@ -23,6 +23,15 @@ export default function RootLayout({ children }) {
           <main>
             <div className="container">{children}</div>
           </main>
+          <footer className="footer">
+            <div className="container">
+              Movie data and posters from{" "}
+              <a href="https://www.themoviedb.org" target="_blank" rel="noopener noreferrer">
+                TMDB
+              </a>
+              . This product uses the TMDB API but is not endorsed or certified by TMDB.
+            </div>
+          </footer>
         </AuthProvider>
       </body>
     </html>

@@ -26,6 +26,7 @@ I built this while learning Express and MongoDB, moving on from a previous proje
 ## Features
 
 - Accounts with username, email and password built from scratch (sign in with username or email): scrypt password hashing, server-side sessions in HttpOnly cookies, login rate limiting
+- Movie search powered by [TMDB](https://www.themoviedb.org): pick a movie to get its poster, synopsis and year, or type it yourself
 - Personal shelf split into **my picks** and **recommended by friends**
 - **Public or private** shelves: visitors browse public shelves, private ones are visible only to the owner and their friends
 - Friend requests with a small state machine (`pending`, `accepted`, `denied`)
@@ -61,7 +62,7 @@ User {
   shelf: {
     visibility: "public" | "private"
     movies: [{
-      externalId, title (required), desc,
+      externalId (TMDB id), title (required), desc, posterPath,
       recommendedBy: ObjectId -> User,
       recommendationText
     }]
@@ -80,7 +81,7 @@ Relationship {
 }
 ```
 
-A title is a recommendation when it has `recommendedBy`. A friendship is stored only on the requester's side, so the API checks both directions when it needs to know whether two people are friends.
+A title is a recommendation when it has `recommendedBy`. Movies picked from TMDB are shown with live data from TMDB (cached for 24 hours); the stored title, synopsis and poster are a fallback when TMDB is unavailable. A friendship is stored only on the requester's side, so the API checks both directions when it needs to know whether two people are friends.
 
 ## API
 
@@ -109,6 +110,7 @@ A title is a recommendation when it has `recommendedBy`. A friendship is stored 
 | GET | `/friendship` | signed-in user (requests they received) |
 | POST | `/update-relationship-state` | see the transitions below |
 | GET | `/relationships` | signed-in user (their own relationships) |
+| GET | `/movies/search?q=` | signed-in user (TMDB search, 30 per minute) |
 
 ### Friendship transitions
 
@@ -130,7 +132,7 @@ cp .env.example .env
 npm run dev
 ```
 
-Fill `.env` with your connection string. The API runs on `http://localhost:3000`.
+Fill `.env` with your connection string and your TMDB **API Key** or **API Read Access Token** (themoviedb.org, Settings, API) as `TMDB_API_KEY`. Without the token the app still works, but movie search is disabled. The API runs on `http://localhost:3000`.
 
 ```bash
 cd web
@@ -146,7 +148,7 @@ The web app runs on `http://localhost:3001`.
 | Service | What | Settings |
 |---|---|---|
 | MongoDB Atlas | database | Network Access allows `0.0.0.0/0` (Render has no fixed IP) |
-| Render | API | Web Service from this repo, build `npm install`, start `npm start`, env `MONGODB_URL`, `NODE_ENV=production` |
+| Render | API | Web Service from this repo, build `npm install`, start `npm start`, env `MONGODB_URL`, `NODE_ENV=production`, `TMDB_API_KEY` |
 | Vercel | web app | Root Directory `web`, env `BACKEND_URL` (the Render URL) |
 
 The free Render plan sleeps when idle, so the first request after a while can take up to a minute. The web app shows a notice while it wakes up.
@@ -157,9 +159,9 @@ The free Render plan sleeps when idle, so the first request after a while can ta
 server.js                    app setup, routers, error handler
 src/config/db.js             MongoDB connection
 src/models/                  User, Shelf (schema), Session, Relationship
-src/lib/                     password hashing, sessions
+src/lib/                     password hashing, sessions, TMDB client
 src/middlewares/             identifyUser and optionalUser, errorHandler
-src/routes/                  auth, users, shelf, friendship
+src/routes/                  auth, users, shelf, friendship, movies
 web/app/                     pages: shelves, my shelf, a friend's shelf, friends, login, signup
 web/components/              auth provider and form, header, shelf view, public shelves, movie card
 web/lib/api.js               API client (cookies are sent automatically)
@@ -168,8 +170,12 @@ web/lib/api.js               API client (cookies are sent automatically)
 ## Roadmap
 
 - More media types on the same shelf: games, albums and beyond
-- Real titles and cover art from public catalog APIs (movies, games, music)
+- Catalog APIs for games and music, like TMDB for movies
 - Automated tests for the API
+
+## Credits
+
+Movie data and posters are provided by [TMDB](https://www.themoviedb.org). This product uses the TMDB API but is not endorsed or certified by TMDB.
 
 ## License
 

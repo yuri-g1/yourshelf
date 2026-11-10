@@ -5,8 +5,11 @@ import Poster from "@/components/Poster";
 export default function MovieCard({ movie, recommender, recommenderHref, canRemove, onRemove }) {
   return (
     <article className="movie">
-      <Poster title={movie.title} />
-      <h3>{movie.title}</h3>
+      <Poster title={movie.title} posterPath={movie.posterPath} />
+      <h3>
+        {movie.title}
+        {movie.year && <span className="movie-year"> ({movie.year})</span>}
+      </h3>
 
       {recommender && (
         <div className="movie-from">
