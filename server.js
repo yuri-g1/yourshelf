@@ -9,6 +9,8 @@ const errorHandler = require("./src/middlewares/errorHandler");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.disable("x-powered-by");
+
 app.get("/health", (req, res) => {
   res.json({ ok: true });
 });
