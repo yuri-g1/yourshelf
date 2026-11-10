@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 
 const IMAGE_BASE = "https://image.tmdb.org/t/p/w92";
 
-export default function MovieSearch({ onPick }) {
+export default function MovieSearch({ onPick, autoFocus }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [status, setStatus] = useState("idle");
@@ -47,21 +47,23 @@ export default function MovieSearch({ onPick }) {
 
   return (
     <div className="field">
-      <label htmlFor="movie-search">Search TMDB</label>
+      <label htmlFor="movie-search">Search for a movie</label>
       <input
         id="movie-search"
         type="search"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
-        placeholder="Type a movie name"
+        onKeyDown={(event) => event.key === "Escape" && setQuery("")}
+        placeholder="The Matrix, Spirited Away..."
         autoComplete="off"
+        data-autofocus={autoFocus || undefined}
       />
 
-      {status === "loading" && <span className="field-hint">Searching...</span>}
-      {status === "empty" && <span className="field-hint">No movies found. You can still type it below.</span>}
-      {status === "error" && (
-        <span className="field-hint">Search is unavailable right now. You can still type it below.</span>
-      )}
+      <span className="field-hint" role="status">
+        {status === "loading" && "Searching..."}
+        {status === "empty" && "No movies found. You can add it yourself."}
+        {status === "error" && "Search is unavailable right now. You can add it yourself."}
+      </span>
 
       {results.length > 0 && (
         <ul className="search-results">

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import Avatar from "@/components/Avatar";
+import ConfirmButton from "@/components/ConfirmButton";
 import Loading from "@/components/Loading";
 import { useAuth } from "@/components/AuthProvider";
 import { useApi } from "@/lib/api";
@@ -107,12 +108,11 @@ export default function FriendsPage() {
                       <button className="btn btn-small" onClick={() => answer(user._id, "accepted")}>
                         Accept
                       </button>
-                      <button
-                        className="btn btn-small btn-danger"
-                        onClick={() => answer(user._id, "denied")}
-                      >
-                        Deny
-                      </button>
+                      <ConfirmButton
+                        label="Deny"
+                        confirmLabel="Deny request"
+                        onConfirm={() => answer(user._id, "denied")}
+                      />
                     </div>
                   </div>
                 ))}
@@ -134,12 +134,11 @@ export default function FriendsPage() {
                       <Link href={`/shelf/${user._id}`} className="btn btn-small btn-soft">
                         Open shelf
                       </Link>
-                      <button
-                        className="btn btn-small btn-danger"
-                        onClick={() => answer(user._id, "denied")}
-                      >
-                        Unfriend
-                      </button>
+                      <ConfirmButton
+                        label="Unfriend"
+                        confirmLabel="Unfriend"
+                        onConfirm={() => answer(user._id, "denied")}
+                      />
                     </div>
                   </div>
                 ))}

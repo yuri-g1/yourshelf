@@ -1,15 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import MovieSearch from "@/components/MovieSearch";
 import Poster from "@/components/Poster";
 
-const EMPTY = { title: "", desc: "", note: "", externalId: "", posterPath: "" };
+const EMPTY = { title: "", desc: "", note: "", externalId: "", posterPath: "", year: "" };
 
-export default function MovieForm({ title, subtitle, submitLabel, withNote, onSubmit }) {
+export default function MovieForm({ title, subtitle, submitLabel, successMessage, withNote, onSubmit, onDone }) {
   const [form, setForm] = useState(EMPTY);
+  const [manual, setManual] = useState(false);
   const [error, setError] = useState("");
+  const [status, setStatus] = useState("");
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!status) return;
+    const timer = setTimeout(() => setStatus(""), 4000);
+    return () => clearTimeout(timer);
+  }, [status]);
 
   function update(field) {
     return (event) => setForm({ ...form, [field]: event.target.value });
@@ -22,11 +30,14 @@ export default function MovieForm({ title, subtitle, submitLabel, withNote, onSu
       desc: movie.desc,
       externalId: movie.externalId,
       posterPath: movie.posterPath || "",
+      year: movie.year || "",
     });
+    setManual(false);
   }
 
-  function clearPick() {
-    setForm({ ...form, externalId: "", posterPath: "" });
+  function reset() {
+    setForm({ ...EMPTY, note: form.note });
+    setManual(false);
   }
 
   async function handleSubmit(event) {
@@ -37,6 +48,8 @@ export default function MovieForm({ title, subtitle, submitLabel, withNote, onSu
     try {
       await onSubmit(form);
       setForm(EMPTY);
+      setManual(false);
+      setStatus(successMessage);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -44,54 +57,78 @@ export default function MovieForm({ title, subtitle, submitLabel, withNote, onSu
     }
   }
 
+  const picked = Boolean(form.externalId);
+  const ready = picked || (manual && form.title.trim());
+
   return (
-    <div className="panel">
-      <h2>{title}</h2>
-      {subtitle && <p className="panel-sub">{subtitle}</p>}
+    <div className="add-form">
+      <div className="add-form-head">
+        <div>
+          <h2 id="add-title">{title}</h2>
+          {subtitle && <p className="panel-sub">{subtitle}</p>}
+        </div>
+        <button type="button" className="btn btn-small btn-ghost" onClick={onDone}>
+          Done
+        </button>
+      </div>
+
+      <p className="form-status" role="status">
+        {status}
+      </p>
 
       <form className="form" onSubmit={handleSubmit}>
-        {form.externalId ? (
+        {picked && (
           <div className="picked">
             <div className="picked-poster">
               <Poster title={form.title} posterPath={form.posterPath} />
             </div>
             <div>
               <strong>{form.title}</strong>
+              {form.year && <span className="muted"> ({form.year})</span>}
               <p className="field-hint">From TMDB</p>
-              <button type="button" className="text-link" onClick={clearPick}>
-                Use another movie
+              <button type="button" className="text-link" onClick={reset}>
+                Choose another movie
               </button>
             </div>
           </div>
-        ) : (
-          <MovieSearch onPick={pick} />
         )}
 
-        <div className="field">
-          <label htmlFor="movie-title">Title</label>
-          <input
-            id="movie-title"
-            value={form.title}
-            onChange={update("title")}
-            placeholder="Or type it yourself"
-            maxLength={100}
-            required
-          />
-        </div>
+        {!picked && !manual && (
+          <>
+            <MovieSearch onPick={pick} autoFocus />
+            <button type="button" className="text-link manual-link" onClick={() => setManual(true)}>
+              Can't find it? Add it yourself
+            </button>
+          </>
+        )}
 
-        <div className="field">
-          <label htmlFor="movie-desc">Synopsis</label>
-          <textarea
-            id="movie-desc"
-            value={form.desc}
-            onChange={update("desc")}
-            placeholder="What is it about?"
-            maxLength={500}
-          />
-          <span className="field-hint">Optional</span>
-        </div>
+        {manual && (
+          <>
+            <div className="field">
+              <label htmlFor="movie-title">Title</label>
+              <input
+                id="movie-title"
+                value={form.title}
+                onChange={update("title")}
+                maxLength={100}
+                autoFocus
+                required
+              />
+            </div>
 
-        {withNote && (
+            <div className="field">
+              <label htmlFor="movie-desc">Synopsis</label>
+              <textarea id="movie-desc" value={form.desc} onChange={update("desc")} maxLength={500} />
+              <span className="field-hint">Optional</span>
+            </div>
+
+            <button type="button" className="text-link manual-link" onClick={reset}>
+              Search TMDB instead
+            </button>
+          </>
+        )}
+
+        {withNote && (picked || manual) && (
           <div className="field">
             <label htmlFor="movie-note">Why should they watch it?</label>
             <textarea
@@ -107,9 +144,11 @@ export default function MovieForm({ title, subtitle, submitLabel, withNote, onSu
 
         {error && <div className="alert alert-error">{error}</div>}
 
-        <button className="btn" disabled={saving}>
-          {saving ? "Saving..." : submitLabel}
-        </button>
+        {(picked || manual) && (
+          <button className="btn" disabled={saving || !ready}>
+            {saving ? "Saving..." : submitLabel}
+          </button>
+        )}
       </form>
     </div>
   );

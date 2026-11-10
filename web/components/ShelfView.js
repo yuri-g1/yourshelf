@@ -2,12 +2,17 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import AddTile from "@/components/AddTile";
 import Avatar from "@/components/Avatar";
+import Dialog from "@/components/Dialog";
 import Loading from "@/components/Loading";
 import MovieCard from "@/components/MovieCard";
+import MovieDetail from "@/components/MovieDetail";
 import MovieForm from "@/components/MovieForm";
 import { useAuth } from "@/components/AuthProvider";
 import { useApi } from "@/lib/api";
+
+const PREVIEW_SLOTS = 12;
 
 export default function ShelfView({ userId }) {
   const api = useApi();
@@ -18,6 +23,10 @@ export default function ShelfView({ userId }) {
   const [relation, setRelation] = useState(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [tab, setTab] = useState("all");
+  const [selected, setSelected] = useState(null);
+  const [adding, setAdding] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const ownerId = userId || me?._id;
   const isOwner = Boolean(me && ownerId === me._id);
@@ -107,8 +116,21 @@ export default function ShelfView({ userId }) {
         <div>
           <h1>{isOwner ? "Your shelf" : `${owner.name}'s shelf`}</h1>
           <p className="profile-meta">
-            {visibility === "private" ? "Private shelf" : "Public shelf"}
+            {visibility === "private"
+              ? isOwner
+                ? "Private. Only you and your friends can see it."
+                : "Private shelf"
+              : isOwner
+                ? "Public. Anyone can see it."
+                : "Public shelf"}
           </p>
+          {shelf && (
+            <p className="profile-stats">
+              <strong>{shelf.myShelf.length}</strong> {shelf.myShelf.length === 1 ? "pick" : "picks"}
+              <span aria-hidden="true"> · </span>
+              <strong>{shelf.recommended.length}</strong> from friends
+            </p>
+          )}
         </div>
       </div>
 
@@ -158,44 +180,78 @@ export default function ShelfView({ userId }) {
 
   const canRecommend = !isOwner && relation?.status === "accepted";
 
-  function renderSection(title, list, empty) {
-    return (
-      <section className="shelf-section">
-        <div className="section-head">
-          <h2>{title}</h2>
-          <span className="count">{list.length}</span>
-        </div>
+  const tabs = [
+    { key: "all", label: "All", list: [...shelf.myShelf, ...shelf.recommended] },
+    { key: "picks", label: isOwner ? "My picks" : "Picks", list: shelf.myShelf },
+    { key: "friends", label: "From friends", list: shelf.recommended },
+  ];
+  const current = tabs.find((item) => item.key === tab) || tabs[0];
 
-        {list.length === 0 ? (
-          <div className="empty">
-            <strong>{empty.title}</strong>
-            <span>{empty.body}</span>
-          </div>
-        ) : (
-          <div className="movies">
-            {list.map((movie) => (
-              <MovieCard
-                key={movie._id}
-                movie={movie}
-                recommender={movie.recommendedBy}
-                recommenderHref={
-                  movie.recommendedBy ? hrefFor(movie.recommendedBy._id) : null
-                }
-                canRemove={isOwner}
-                onRemove={(item) =>
-                  run(() =>
-                    api(`/shelf/${ownerId}/movie/${item._id}`, {
-                      method: "DELETE",
-                    }),
-                  )
-                }
-              />
-            ))}
-          </div>
-        )}
-      </section>
-    );
-  }
+  const emptyCopy = {
+    all: isOwner
+      ? { title: "Your shelf is empty", body: "Search for a movie and add it to your picks." }
+      : { title: "Nothing here yet", body: "Check back later." },
+    picks: isOwner
+      ? { title: "No picks yet", body: "Movies you add yourself show up here." }
+      : { title: "No picks yet", body: `${owner.name} has not added anything yet.` },
+    friends: isOwner
+      ? { title: "No recommendations yet", body: "When friends recommend something, it shows up here." }
+      : { title: "No recommendations yet", body: "Friends can recommend something for this shelf." },
+  }[current.key];
+
+  const addTile =
+    (isOwner && current.key !== "friends" && { label: "Add a movie" }) ||
+    (canRecommend && current.key !== "picks" && { label: `Recommend to ${owner.name}` }) ||
+    null;
+  const limit = addTile ? PREVIEW_SLOTS - 1 : PREVIEW_SLOTS;
+  const visible = expanded ? current.list : current.list.slice(0, limit);
+
+  const library = (
+    <section className="shelf-section">
+      <div className="tabs" role="tablist" aria-label="Shelf sections">
+        {tabs.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            role="tab"
+            aria-selected={current.key === item.key}
+            className={`tab-button ${current.key === item.key ? "active" : ""}`}
+            onClick={() => {
+              setTab(item.key);
+              setExpanded(false);
+            }}
+          >
+            {item.label}
+            <span className="count">{item.list.length}</span>
+          </button>
+        ))}
+      </div>
+
+      {current.list.length === 0 && !addTile && (
+        <div className="empty">
+          <strong>{emptyCopy.title}</strong>
+          <span>{emptyCopy.body}</span>
+        </div>
+      )}
+
+      {(visible.length > 0 || addTile) && (
+        <div className="movies" role="tabpanel">
+          {visible.map((movie) => (
+            <MovieCard key={movie._id} movie={movie} onOpen={setSelected} />
+          ))}
+          {addTile && <AddTile label={addTile.label} onClick={() => setAdding(true)} />}
+        </div>
+      )}
+
+      {current.list.length > limit && (
+        <div className="show-all">
+          <button type="button" className="btn btn-small btn-soft" onClick={() => setExpanded(!expanded)}>
+            {expanded ? "Show less" : `Show all ${current.list.length}`}
+          </button>
+        </div>
+      )}
+    </section>
+  );
 
   return (
     <>
@@ -204,80 +260,63 @@ export default function ShelfView({ userId }) {
       {error && <div className="alert alert-error">{error}</div>}
       {notice && <div className="alert alert-info">{notice}</div>}
 
-      <div
-        className={`shelf-layout ${isOwner || canRecommend ? "has-aside" : ""}`}
-      >
-        <div className="reveal reveal-2">
-          {friendCallout && (
-            <div style={{ marginBottom: 40 }}>{friendCallout}</div>
-          )}
+      <div className="reveal reveal-2">
+        {library}
 
-          {renderSection(
-            isOwner ? "My picks" : `${owner.name}'s picks`,
-            shelf.myShelf,
-            isOwner
-              ? {
-                  title: "Your shelf is empty",
-                  body: "Add your first movie with the form.",
-                }
-              : { title: "Nothing here yet", body: "Check back later." },
-          )}
-
-          {renderSection("Recommended by friends", shelf.recommended, {
-            title: "No recommendations yet",
-            body: isOwner
-              ? "When friends recommend something, it shows up here."
-              : "Friends can recommend something for this shelf.",
-          })}
-        </div>
-
-        {isOwner && (
-          <aside className="aside reveal reveal-3">
-            <MovieForm
-              title="Add a movie"
-              subtitle="It goes straight to your picks."
-              submitLabel="Add to shelf"
-              onSubmit={(form) =>
-                api(`/shelf/${ownerId}/movie`, {
-                  method: "POST",
-                  body: {
-                    title: form.title,
-                    desc: form.desc,
-                    externalId: form.externalId,
-                    posterPath: form.posterPath,
-                  },
-                }).then(load)
-              }
-            />
-          </aside>
-        )}
-
-        {canRecommend && (
-          <aside className="aside reveal reveal-3">
-            <MovieForm
-              title={`Recommend to ${owner.name}`}
-              subtitle="It appears on their shelf with your note."
-              submitLabel="Recommend"
-              withNote
-              onSubmit={(form) =>
-                api(`/recommend/shelf/${ownerId}/movie`, {
-                  method: "POST",
-                  body: {
-                    title: form.title,
-                    desc: form.desc,
-                    externalId: form.externalId,
-                    posterPath: form.posterPath,
-                    recommendationText: form.note,
-                  },
-                }).then(() => {
-                  setNotice(`Recommendation sent to ${owner.name}.`);
-                  return load();
-                })
-              }
-            />
-          </aside>
-        )}
+        {friendCallout && <div style={{ marginTop: 40 }}>{friendCallout}</div>}
       </div>
+
+      <Dialog open={adding} onClose={() => setAdding(false)} labelledBy="add-title" className="add-dialog">
+        {isOwner ? (
+          <MovieForm
+            title="Add a movie"
+            subtitle="It goes straight to your picks."
+            submitLabel="Add to shelf"
+            successMessage="Added. Add another or press Done."
+            onDone={() => setAdding(false)}
+            onSubmit={(form) =>
+              api(`/shelf/${ownerId}/movie`, {
+                method: "POST",
+                body: {
+                  title: form.title,
+                  desc: form.desc,
+                  externalId: form.externalId,
+                  posterPath: form.posterPath,
+                },
+              }).then(load)
+            }
+          />
+        ) : (
+          <MovieForm
+            title={`Recommend to ${owner.name}`}
+            subtitle="It appears on their shelf with your note."
+            submitLabel="Recommend"
+            successMessage={`Sent to ${owner.name}. Recommend another or press Done.`}
+            withNote
+            onDone={() => setAdding(false)}
+            onSubmit={(form) =>
+              api(`/recommend/shelf/${ownerId}/movie`, {
+                method: "POST",
+                body: {
+                  title: form.title,
+                  desc: form.desc,
+                  externalId: form.externalId,
+                  posterPath: form.posterPath,
+                  recommendationText: form.note,
+                },
+              }).then(load)
+            }
+          />
+        )}
+      </Dialog>
+
+      <MovieDetail
+        movie={selected}
+        recommenderHref={selected?.recommendedBy ? hrefFor(selected.recommendedBy._id) : null}
+        canRemove={isOwner}
+        onRemove={(item) => run(() => api(`/shelf/${ownerId}/movie/${item._id}`, { method: "DELETE" }))}
+        onClose={() => setSelected(null)}
+      />
     </>
   );
 }

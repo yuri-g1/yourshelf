@@ -1,36 +1,15 @@
-import Link from "next/link";
-import Avatar from "@/components/Avatar";
 import Poster from "@/components/Poster";
 
-export default function MovieCard({ movie, recommender, recommenderHref, canRemove, onRemove }) {
+export default function MovieCard({ movie, onOpen }) {
+  const recommender = movie.recommendedBy;
+
   return (
-    <article className="movie">
+    <button type="button" className="movie" onClick={() => onOpen(movie)}>
       <Poster title={movie.title} posterPath={movie.posterPath} />
-      <h3>
-        {movie.title}
-        {movie.year && <span className="movie-year"> ({movie.year})</span>}
-      </h3>
-
-      {recommender && (
-        <div className="movie-from">
-          <Avatar name={recommender.name} size="sm" />
-          <span>
-            from <Link href={recommenderHref}>{recommender.name}</Link>
-          </span>
-        </div>
-      )}
-
-      {movie.recommendationText && (
-        <p className="note">“{movie.recommendationText}”</p>
-      )}
-
-      {movie.desc && <p className="movie-desc">{movie.desc}</p>}
-
-      {canRemove && (
-        <button className="text-link movie-remove" onClick={() => onRemove(movie)}>
-          Remove
-        </button>
-      )}
-    </article>
+      <span className="movie-title">{movie.title}</span>
+      <span className="movie-meta">
+        {recommender ? `from ${recommender.name}` : movie.year || "Your pick"}
+      </span>
+    </button>
   );
 }

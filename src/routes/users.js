@@ -9,15 +9,37 @@ function visibilityOf(user) {
   return user.shelf?.visibility ?? "public";
 }
 
+const PREVIEW_SIZE = 4;
+
+function previewOf(user) {
+  const movies = user.shelf?.movies ?? [];
+
+  return {
+    picks: movies.filter((movie) => !movie.recommendedBy).length,
+    recommended: movies.filter((movie) => movie.recommendedBy).length,
+    posters: movies
+      .slice(-PREVIEW_SIZE)
+      .reverse()
+      .map((movie) => ({ title: movie.title, posterPath: movie.posterPath || null })),
+  };
+}
+
 router.get("/users", async (req, res) => {
-  const users = await User.find().select("name shelf.visibility").sort("name");
+  const users = await User.find()
+    .select("name shelf.visibility shelf.movies.title shelf.movies.posterPath shelf.movies.recommendedBy")
+    .sort("name");
 
   return res.json(
-    users.map((user) => ({
-      _id: user._id,
-      name: user.name,
-      visibility: visibilityOf(user),
-    })),
+    users.map((user) => {
+      const visibility = visibilityOf(user);
+
+      return {
+        _id: user._id,
+        name: user.name,
+        visibility,
+        preview: visibility === "public" ? previewOf(user) : null,
+      };
+    }),
   );
 });
 
