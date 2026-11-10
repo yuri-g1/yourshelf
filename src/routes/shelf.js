@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const User = require("../models/User");
 const Relationship = require("../models/Relationship");
-const identifyUser = require("../middlewares/IdentifyUser");
+const { identifyUser, optionalUser } = require("../middlewares/IdentifyUser");
 
 const router = express.Router();
 
@@ -18,7 +18,16 @@ function isOwner(req) {
   return String(req.user._id) === req.params.id;
 }
 
-router.get("/shelf/:id", async (req, res) => {
+async function canView(viewer, owner) {
+  if ((owner.shelf?.visibility ?? "public") === "public") return true;
+  if (!viewer) return false;
+  if (viewer._id.equals(owner._id)) return true;
+
+  const relation = await Relationship.findBetween(viewer._id, owner._id);
+  return relation?.status === "accepted";
+}
+
+router.get("/shelf/:id", optionalUser, async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
     return res.status(400).json({ error: "Invalid user id" });
   }
@@ -32,10 +41,21 @@ router.get("/shelf/:id", async (req, res) => {
     return res.status(404).json({ error: "User not found" });
   }
 
+  const visibility = user.shelf?.visibility ?? "public";
+
+  if (!(await canView(req.user, user))) {
+    return res.status(403).json({
+      error: "This shelf is private",
+      owner: { _id: user._id, name: user.name },
+      visibility,
+    });
+  }
+
   const movies = user.shelf?.movies ?? [];
 
   return res.json({
     owner: { _id: user._id, name: user.name },
+    visibility,
     myShelf: movies.filter((movie) => !movie.recommendedBy),
     recommended: movies.filter((movie) => movie.recommendedBy),
   });

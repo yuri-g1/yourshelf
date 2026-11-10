@@ -5,20 +5,24 @@ import { useState } from "react";
 export default function MovieForm({ title, subtitle, submitLabel, withNote, onSubmit }) {
   const [form, setForm] = useState({ title: "", desc: "", note: "" });
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   function update(field) {
     return (event) => setForm({ ...form, [field]: event.target.value });
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
     setError("");
+    setSaving(true);
 
     try {
-      onSubmit(form);
+      await onSubmit(form);
       setForm({ title: "", desc: "", note: "" });
     } catch (err) {
       setError(err.message);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -34,7 +38,7 @@ export default function MovieForm({ title, subtitle, submitLabel, withNote, onSu
             id="movie-title"
             value={form.title}
             onChange={update("title")}
-            placeholder="Lorem Ipsum"
+            placeholder="The Matrix"
             required
           />
         </div>
@@ -45,7 +49,7 @@ export default function MovieForm({ title, subtitle, submitLabel, withNote, onSu
             id="movie-desc"
             value={form.desc}
             onChange={update("desc")}
-            placeholder="Dolor sit amet, consectetur adipiscing elit."
+            placeholder="What is it about?"
           />
           <span className="field-hint">Optional</span>
         </div>
@@ -57,7 +61,7 @@ export default function MovieForm({ title, subtitle, submitLabel, withNote, onSu
               id="movie-note"
               value={form.note}
               onChange={update("note")}
-              placeholder="Sed do eiusmod tempor, trust me on this one."
+              placeholder="A line or two for your friend"
             />
             <span className="field-hint">Optional, shows on their shelf</span>
           </div>
@@ -65,7 +69,9 @@ export default function MovieForm({ title, subtitle, submitLabel, withNote, onSu
 
         {error && <div className="alert alert-error">{error}</div>}
 
-        <button className="btn">{submitLabel}</button>
+        <button className="btn" disabled={saving}>
+          {saving ? "Saving..." : submitLabel}
+        </button>
       </form>
     </div>
   );

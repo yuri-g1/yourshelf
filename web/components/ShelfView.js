@@ -1,55 +1,158 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Avatar from "@/components/Avatar";
+import Loading from "@/components/Loading";
 import MovieCard from "@/components/MovieCard";
 import MovieForm from "@/components/MovieForm";
-import { demo, findRelation, findUser, relationsOf, useDemo } from "@/lib/demo";
+import { useAuth } from "@/components/AuthProvider";
+import { useApi } from "@/lib/api";
 
 export default function ShelfView({ userId }) {
-  const data = useDemo();
+  const api = useApi();
+  const { user: me, loading: meLoading } = useAuth();
+  const isSignedIn = Boolean(me);
+  const [shelf, setShelf] = useState(null);
+  const [locked, setLocked] = useState(null);
+  const [relation, setRelation] = useState(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
-  const ownerId = userId || data.me;
-  const owner = findUser(data, ownerId);
-  const isOwner = ownerId === data.me;
+  const ownerId = userId || me?._id;
+  const isOwner = Boolean(me && ownerId === me._id);
+  const ready = !meLoading;
 
-  if (!owner) {
-    return (
-      <div className="empty">
-        <strong>This shelf does not exist</strong>
-        <span>
-          Go back to <Link href="/">your shelf</Link>.
-        </span>
-      </div>
-    );
-  }
+  const load = useCallback(async () => {
+    if (!ownerId) return;
 
-  const movies = data.movies[ownerId] || [];
-  const picks = movies.filter((movie) => !movie.recommendedBy);
-  const recommended = movies.filter((movie) => movie.recommendedBy);
-  const relation = isOwner ? null : findRelation(data, data.me, ownerId);
-  const friendCount = relationsOf(data, ownerId).filter(
-    (item) => item.status === "accepted",
-  ).length;
+    try {
+      setShelf(await api(`/shelf/${ownerId}`));
+      setLocked(null);
+    } catch (err) {
+      if (err.status === 403 && err.data?.owner) {
+        setLocked(err.data);
+        setShelf(null);
+      } else {
+        setError(err.message);
+      }
+    }
 
-  function hrefFor(id) {
-    return id === data.me ? "/" : `/shelf/${id}`;
-  }
+    if (me && me._id !== ownerId) {
+      try {
+        const relationships = await api("/relationships");
+        setRelation(
+          relationships.find(
+            (item) => item.user?._id === ownerId && item.status !== "denied",
+          ) || null,
+        );
+      } catch {
+        setRelation(null);
+      }
+    } else {
+      setRelation(null);
+    }
+  }, [api, ownerId, me]);
 
-  function run(action, message) {
+  useEffect(() => {
+    if (ready) load();
+  }, [ready, load]);
+
+  async function run(action, message) {
     setError("");
     setNotice("");
 
     try {
-      action();
+      await action();
       if (message) setNotice(message);
+      await load();
     } catch (err) {
       setError(err.message);
     }
   }
+
+  if (!ready || (!shelf && !locked && !error)) {
+    return <Loading label="Loading shelf..." />;
+  }
+
+  if (error && !shelf && !locked) {
+    return <div className="alert alert-error">{error}</div>;
+  }
+
+  const owner = (shelf || locked).owner;
+  const visibility = (shelf || locked).visibility;
+
+  function hrefFor(id) {
+    return me && id === me._id ? "/" : `/shelf/${id}`;
+  }
+
+  const friendCallout = !isOwner && relation?.status !== "accepted" && (
+    <FriendCallout
+      name={owner.name}
+      relation={relation}
+      signedIn={isSignedIn}
+      onRequest={() =>
+        run(
+          () => api(`/friendship/${ownerId}`, { method: "POST" }),
+          `Friend request sent to ${owner.name}.`,
+        )
+      }
+    />
+  );
+
+  const header = (
+    <div className="profile reveal">
+      <div className="profile-id">
+        <Avatar name={owner.name} size="lg" />
+        <div>
+          <h1>{isOwner ? "Your shelf" : `${owner.name}'s shelf`}</h1>
+          <p className="profile-meta">
+            {visibility === "private" ? "Private shelf" : "Public shelf"}
+          </p>
+        </div>
+      </div>
+
+      {isOwner && (
+        <div className="segmented" role="group" aria-label="Shelf visibility">
+          {["public", "private"].map((option) => (
+            <button
+              key={option}
+              className={visibility === option ? "active" : ""}
+              aria-pressed={visibility === option}
+              onClick={() =>
+                visibility !== option &&
+                run(
+                  () => api("/me/shelf", { method: "PATCH", body: { visibility: option } }),
+                  option === "private"
+                    ? "Your shelf is now private. Only friends can see it."
+                    : "Your shelf is now public.",
+                )
+              }
+            >
+              {option === "public" ? "Public" : "Private"}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  if (locked) {
+    return (
+      <>
+        {header}
+        {error && <div className="alert alert-error">{error}</div>}
+        {notice && <div className="alert alert-info">{notice}</div>}
+        <div className="empty">
+          <strong>This shelf is private</strong>
+          <span>Only {owner.name} and their friends can see it.</span>
+        </div>
+        <div style={{ marginTop: 24 }}>{friendCallout}</div>
+      </>
+    );
+  }
+
+  const canRecommend = !isOwner && relation?.status === "accepted";
 
   function renderSection(title, list, empty) {
     return (
@@ -66,86 +169,48 @@ export default function ShelfView({ userId }) {
           </div>
         ) : (
           <div className="movies">
-            {list.map((movie) => {
-              const recommender = movie.recommendedBy
-                ? findUser(data, movie.recommendedBy)
-                : null;
-
-              return (
-                <MovieCard
-                  key={movie._id}
-                  movie={movie}
-                  recommender={recommender}
-                  recommenderHref={recommender ? hrefFor(recommender._id) : null}
-                  canRemove={isOwner}
-                  onRemove={(item) => run(() => demo.removeMovie(item._id))}
-                />
-              );
-            })}
+            {list.map((movie) => (
+              <MovieCard
+                key={movie._id}
+                movie={movie}
+                recommender={movie.recommendedBy}
+                recommenderHref={movie.recommendedBy ? hrefFor(movie.recommendedBy._id) : null}
+                canRemove={isOwner}
+                onRemove={(item) =>
+                  run(() => api(`/shelf/${ownerId}/movie/${item._id}`, { method: "DELETE" }))
+                }
+              />
+            ))}
           </div>
         )}
       </section>
     );
   }
 
-  const canRecommend = relation?.status === "accepted";
-
   return (
     <>
-      <div className="profile reveal">
-        <div className="profile-id">
-          <Avatar name={owner.name} size="lg" />
-          <div>
-            <h1>{isOwner ? "Your shelf" : `${owner.name}'s shelf`}</h1>
-            <p className="profile-meta">
-              {isOwner
-                ? "Lorem ipsum dolor sit amet, everything you love in one place."
-                : "Consectetur adipiscing elit, a friend's picks."}
-            </p>
-          </div>
-        </div>
-
-        <div className="stats">
-          <div className="stat">
-            <strong>{movies.length}</strong>
-            <span>movies</span>
-          </div>
-          <div className="stat">
-            <strong>{friendCount}</strong>
-            <span>friends</span>
-          </div>
-        </div>
-      </div>
+      {header}
 
       {error && <div className="alert alert-error">{error}</div>}
       {notice && <div className="alert alert-info">{notice}</div>}
 
       <div className={`shelf-layout ${isOwner || canRecommend ? "has-aside" : ""}`}>
         <div className="reveal reveal-2">
-          {!isOwner && !canRecommend && (
-            <FriendCallout
-              name={owner.name}
-              relation={relation}
-              meId={data.me}
-              onRequest={() =>
-                run(() => demo.sendRequest(ownerId), `Friend request sent to ${owner.name}.`)
-              }
-            />
-          )}
+          {friendCallout && <div style={{ marginBottom: 40 }}>{friendCallout}</div>}
 
           {renderSection(
             isOwner ? "My picks" : `${owner.name}'s picks`,
-            picks,
+            shelf.myShelf,
             isOwner
               ? { title: "Your shelf is empty", body: "Add your first movie with the form." }
-              : { title: "Nothing here yet", body: "Lorem ipsum, check back later." },
+              : { title: "Nothing here yet", body: "Check back later." },
           )}
 
-          {renderSection("Recommended by friends", recommended, {
+          {renderSection("Recommended by friends", shelf.recommended, {
             title: "No recommendations yet",
             body: isOwner
-              ? "When friends recommend a movie, it shows up here."
-              : "Be the first friend to recommend something.",
+              ? "When friends recommend something, it shows up here."
+              : "Friends can recommend something for this shelf.",
           })}
         </div>
 
@@ -155,22 +220,36 @@ export default function ShelfView({ userId }) {
               title="Add a movie"
               subtitle="It goes straight to your picks."
               submitLabel="Add to shelf"
-              onSubmit={(form) => demo.addMovie(form)}
+              onSubmit={(form) =>
+                api(`/shelf/${ownerId}/movie`, {
+                  method: "POST",
+                  body: { title: form.title, desc: form.desc },
+                }).then(load)
+              }
             />
           </aside>
         )}
 
-        {!isOwner && canRecommend && (
+        {canRecommend && (
           <aside className="aside reveal reveal-3">
             <MovieForm
               title={`Recommend to ${owner.name}`}
               subtitle="It appears on their shelf with your note."
               submitLabel="Recommend"
               withNote
-              onSubmit={(form) => {
-                demo.recommend(ownerId, form);
-                setNotice(`Recommendation sent to ${owner.name}.`);
-              }}
+              onSubmit={(form) =>
+                api(`/recommend/shelf/${ownerId}/movie`, {
+                  method: "POST",
+                  body: {
+                    title: form.title,
+                    desc: form.desc,
+                    recommendationText: form.note,
+                  },
+                }).then(() => {
+                  setNotice(`Recommendation sent to ${owner.name}.`);
+                  return load();
+                })
+              }
             />
           </aside>
         )}
@@ -179,39 +258,52 @@ export default function ShelfView({ userId }) {
   );
 }
 
-function FriendCallout({ name, relation, meId, onRequest }) {
-  let body;
-
-  if (!relation || relation.status === "denied") {
-    body = (
-      <>
-        <span>Become friends with {name} to recommend something for their shelf.</span>
+function FriendCallout({ name, relation, signedIn, onRequest }) {
+  if (!signedIn) {
+    return (
+      <div className="empty">
+        <strong>Want to recommend something to {name}?</strong>
+        <span>Sign in and send a friend request.</span>
         <div>
-          <button className="btn btn-small" onClick={onRequest}>
-            Add friend
-          </button>
+          <Link href="/login" className="btn btn-small">
+            Sign in
+          </Link>
         </div>
-      </>
+      </div>
     );
-  } else if (relation.from === meId) {
-    body = <span>Your friend request is waiting for {name} to answer.</span>;
-  } else {
-    body = (
-      <>
-        <span>{name} sent you a friend request.</span>
+  }
+
+  if (relation?.status === "pending" && relation.direction === "sent") {
+    return (
+      <div className="empty">
+        <strong>Request sent</strong>
+        <span>Waiting for {name} to answer.</span>
+      </div>
+    );
+  }
+
+  if (relation?.status === "pending") {
+    return (
+      <div className="empty">
+        <strong>{name} sent you a friend request</strong>
         <div>
           <Link href="/friends" className="btn btn-small btn-soft">
             Answer request
           </Link>
         </div>
-      </>
+      </div>
     );
   }
 
   return (
-    <div className="empty" style={{ marginBottom: 40 }}>
+    <div className="empty">
       <strong>You are not friends yet</strong>
-      {body}
+      <span>Become friends with {name} to recommend something for their shelf.</span>
+      <div>
+        <button className="btn btn-small" onClick={onRequest}>
+          Add friend
+        </button>
+      </div>
     </div>
   );
 }

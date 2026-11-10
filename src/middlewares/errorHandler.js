@@ -16,6 +16,10 @@ function errorHandler(error, req, res, next) {
     return res.status(409).json({ error: "Duplicate value" });
   }
 
+  if (error.status >= 400 && error.status < 500) {
+    return res.status(error.status).json({ error: error.message });
+  }
+
   console.error(error);
   return res.status(500).json({ error: "Internal server error" });
 }

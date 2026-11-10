@@ -769,32 +769,6 @@ textarea {
   border-radius: 14px;
 }
 
-.demo-bar {
-  background: var(--surface-2);
-  border-bottom: 1px solid var(--line);
-  font-size: 14px;
-}
-
-.demo-bar-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-height: 44px;
-  padding-top: 6px;
-  padding-bottom: 6px;
-  flex-wrap: wrap;
-}
-
-.demo-bar p {
-  margin: 0;
-  color: var(--muted);
-}
-
-.demo-bar strong {
-  color: var(--text);
-}
-
 .tag {
   display: inline-flex;
   align-items: center;
@@ -848,4 +822,90 @@ textarea {
 
 .aside .stack {
   gap: 16px;
+}
+
+
+
+.segmented {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.segmented button {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  border: 0;
+  border-radius: var(--r-pill);
+  padding: 8px 16px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.25s var(--ease), color 0.25s var(--ease);
+}
+
+.segmented button.active {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.people {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.person-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: var(--r-card);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+  transition: transform 0.3s var(--ease);
+}
+
+.person-card:hover {
+  transform: translateY(-2px);
+}
+
+.person-card-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.loading-label {
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+.auth {
+  max-width: 420px;
+  margin: 24px auto 0;
+}
+
+.auth-title {
+  margin: 0 0 4px;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+}
+
+.auth-switch {
+  margin: 20px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.auth-switch a {
+  color: var(--text);
+  font-weight: 600;
 }

@@ -9,6 +9,7 @@ const moviesSchema = mongoose.Schema({
 });
 
 const shelfSchema = mongoose.Schema({
+  visibility: { type: String, enum: ["public", "private"], default: "public" },
   movies: [moviesSchema],
 });
 

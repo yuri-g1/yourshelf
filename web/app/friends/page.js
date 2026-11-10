@@ -1,40 +1,90 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Avatar from "@/components/Avatar";
-import { demo, findUser, relationsOf, useDemo } from "@/lib/demo";
+import Loading from "@/components/Loading";
+import { useAuth } from "@/components/AuthProvider";
+import { useApi } from "@/lib/api";
 
 export default function FriendsPage() {
-  const data = useDemo();
+  const api = useApi();
+  const { user: me, loading } = useAuth();
+  const isSignedIn = Boolean(me);
+  const [data, setData] = useState(null);
   const [error, setError] = useState("");
 
-  const mine = relationsOf(data, data.me).map((relation) => ({
-    ...relation,
-    user: findUser(data, relation.other),
-  }));
+  const load = useCallback(async () => {
+    try {
+      const [requests, relationships, users] = await Promise.all([
+        api("/friendship"),
+        api("/relationships"),
+        api("/users"),
+      ]);
+      setData({ requests, relationships, users });
+    } catch (err) {
+      setError(err.message);
+    }
+  }, [api]);
 
-  const requests = mine.filter((item) => item.status === "pending" && item.direction === "received");
-  const friends = mine.filter((item) => item.status === "accepted");
-  const sent = mine.filter((item) => item.status === "pending" && item.direction === "sent");
-  const busy = new Set(mine.filter((item) => item.status !== "denied").map((item) => item.other));
-  const suggestions = data.users.filter((user) => user._id !== data.me && !busy.has(user._id));
+  useEffect(() => {
+    if (isSignedIn) load();
+  }, [isSignedIn, load]);
 
-  function run(action) {
+  async function run(action) {
     setError("");
 
     try {
-      action();
+      await action();
+      await load();
     } catch (err) {
       setError(err.message);
     }
   }
 
+  function answer(userId, state) {
+    return run(() =>
+      api("/update-relationship-state", {
+        method: "POST",
+        body: { userId, relationship_state: state },
+      }),
+    );
+  }
+
+  if (loading) return <Loading />;
+
+  if (!isSignedIn) {
+    return (
+      <div className="empty">
+        <strong>Sign in to see your friends</strong>
+        <div>
+          <Link href="/login" className="btn btn-small">
+            Sign in
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data || !me) {
+    return error ? <div className="alert alert-error">{error}</div> : <Loading label="Loading friends..." />;
+  }
+
+  const requests = data.requests.map((item) => item.from);
+  const friends = data.relationships.filter((item) => item.status === "accepted");
+  const sent = data.relationships.filter(
+    (item) => item.status === "pending" && item.direction === "sent",
+  );
+  const busy = new Set(
+    data.relationships.filter((item) => item.status !== "denied").map((item) => item.user?._id),
+  );
+  const suggestions = data.users.filter((user) => user._id !== me._id && !busy.has(user._id));
+
   return (
     <>
       <h1 className="page-title reveal">Friends</h1>
       <p className="page-sub reveal">
-        Friends can recommend things for your shelf. Lorem ipsum dolor sit amet.
+        Friends can recommend things for your shelf and see it even when it is private.
       </p>
 
       {error && <div className="alert alert-error">{error}</div>}
@@ -50,19 +100,16 @@ export default function FriendsPage() {
             </p>
             {requests.length > 0 && (
               <div className="rows">
-                {requests.map(({ user }) => (
+                {requests.map((user) => (
                   <div key={user._id} className="row-item">
                     <Person user={user} />
                     <div className="row-actions">
-                      <button
-                        className="btn btn-small"
-                        onClick={() => run(() => demo.answer(user._id, "accepted"))}
-                      >
+                      <button className="btn btn-small" onClick={() => answer(user._id, "accepted")}>
                         Accept
                       </button>
                       <button
                         className="btn btn-small btn-danger"
-                        onClick={() => run(() => demo.answer(user._id, "denied"))}
+                        onClick={() => answer(user._id, "denied")}
                       >
                         Deny
                       </button>
@@ -89,7 +136,7 @@ export default function FriendsPage() {
                       </Link>
                       <button
                         className="btn btn-small btn-danger"
-                        onClick={() => run(() => demo.answer(user._id, "denied"))}
+                        onClick={() => answer(user._id, "denied")}
                       >
                         Unfriend
                       </button>
@@ -114,7 +161,7 @@ export default function FriendsPage() {
                     <Person user={user} />
                     <button
                       className="btn btn-small"
-                      onClick={() => run(() => demo.sendRequest(user._id))}
+                      onClick={() => run(() => api(`/friendship/${user._id}`, { method: "POST" }))}
                     >
                       Add friend
                     </button>
