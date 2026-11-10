@@ -122,7 +122,11 @@ export default function ShelfView({ userId }) {
               onClick={() =>
                 visibility !== option &&
                 run(
-                  () => api("/me/shelf", { method: "PATCH", body: { visibility: option } }),
+                  () =>
+                    api("/me/shelf", {
+                      method: "PATCH",
+                      body: { visibility: option },
+                    }),
                   option === "private"
                     ? "Your shelf is now private. Only friends can see it."
                     : "Your shelf is now public.",
@@ -174,10 +178,16 @@ export default function ShelfView({ userId }) {
                 key={movie._id}
                 movie={movie}
                 recommender={movie.recommendedBy}
-                recommenderHref={movie.recommendedBy ? hrefFor(movie.recommendedBy._id) : null}
+                recommenderHref={
+                  movie.recommendedBy ? hrefFor(movie.recommendedBy._id) : null
+                }
                 canRemove={isOwner}
                 onRemove={(item) =>
-                  run(() => api(`/shelf/${ownerId}/movie/${item._id}`, { method: "DELETE" }))
+                  run(() =>
+                    api(`/shelf/${ownerId}/movie/${item._id}`, {
+                      method: "DELETE",
+                    }),
+                  )
                 }
               />
             ))}
@@ -194,15 +204,22 @@ export default function ShelfView({ userId }) {
       {error && <div className="alert alert-error">{error}</div>}
       {notice && <div className="alert alert-info">{notice}</div>}
 
-      <div className={`shelf-layout ${isOwner || canRecommend ? "has-aside" : ""}`}>
+      <div
+        className={`shelf-layout ${isOwner || canRecommend ? "has-aside" : ""}`}
+      >
         <div className="reveal reveal-2">
-          {friendCallout && <div style={{ marginBottom: 40 }}>{friendCallout}</div>}
+          {friendCallout && (
+            <div style={{ marginBottom: 40 }}>{friendCallout}</div>
+          )}
 
           {renderSection(
             isOwner ? "My picks" : `${owner.name}'s picks`,
             shelf.myShelf,
             isOwner
-              ? { title: "Your shelf is empty", body: "Add your first movie with the form." }
+              ? {
+                  title: "Your shelf is empty",
+                  body: "Add your first movie with the form.",
+                }
               : { title: "Nothing here yet", body: "Check back later." },
           )}
 
@@ -298,7 +315,9 @@ function FriendCallout({ name, relation, signedIn, onRequest }) {
   return (
     <div className="empty">
       <strong>You are not friends yet</strong>
-      <span>Become friends with {name} to recommend something for their shelf.</span>
+      <span>
+        Become friends with {name} to recommend something for their shelf.
+      </span>
       <div>
         <button className="btn btn-small" onClick={onRequest}>
           Add friend

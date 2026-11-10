@@ -71,6 +71,12 @@ router.post("/shelf/:id/movie", identifyUser, async (req, res) => {
   const user = req.user;
   if (!user.shelf) user.shelf = {};
 
+  if (user.shelf.movies.length >= 100) {
+    return res.status(422).json({
+      error: "You have already used all the spaces for movies available",
+    });
+  }
+
   user.shelf.movies.push(pickMovieFields(req.body));
   await user.save();
 
@@ -120,12 +126,17 @@ router.post("/recommend/shelf/:id/movie", identifyUser, async (req, res) => {
   const relation = await Relationship.findBetween(req.user._id, owner._id);
 
   if (relation?.status !== "accepted") {
-    return res
-      .status(403)
-      .json({ error: "Only friends can recommend movies" });
+    return res.status(403).json({ error: "Only friends can recommend movies" });
   }
 
   if (!owner.shelf) owner.shelf = {};
+
+  if (owner.shelf.movies.length >= 100) {
+    return res.status(422).json({
+      error:
+        "This friend has a full shelf, he can't receive any more recommendations",
+    });
+  }
 
   owner.shelf.movies.push({
     ...pickMovieFields(req.body),

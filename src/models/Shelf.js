@@ -1,10 +1,10 @@
 const mongoose = require("mongoose");
 
 const moviesSchema = mongoose.Schema({
-  externalId: { type: String },
-  title: { type: String, required: true },
-  desc: { type: String },
-  recommendationText: { type: String },
+  externalId: { type: String, maxLength: 100 },
+  title: { type: String, required: true, maxLength: 100 },
+  desc: { type: String, maxLength: 500 },
+  recommendationText: { type: String, maxLength: 500 },
   recommendedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 });
 
