@@ -89,6 +89,7 @@ A title is a recommendation when it has `recommendedBy`. A friendship is stored 
 - **Passwords** are hashed with `scrypt` (Node `crypto`) and a random 16-byte salt per user, stored as `scrypt$salt$hash`, and compared with `timingSafeEqual`.
 - **Sessions**: signing up or in creates a random 32-byte token. The browser gets it in an `HttpOnly`, `SameSite=Lax` cookie (`Secure` in production); the database only stores its SHA-256 hash, so a database leak does not leak usable sessions. Sessions last 30 days and are removed automatically by a TTL index.
 - **Login protection**: the same error for an unknown account and a wrong password, a dummy hash check for unknown users so timing does not reveal which accounts exist, and a lock after 10 failed attempts for 15 minutes.
+- **Rate limiting** (`src/middlewares/rateLimiting.js`): 5 signups per hour and 20 login attempts per 15 minutes per client IP, and 60 write requests per minute per signed-in user. Counters live in memory and reset when the server restarts.
 - No authentication library is used.
 
 | Method | Route | Who can call |

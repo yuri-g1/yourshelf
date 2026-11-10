@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const User = require("../models/User");
 const Relationship = require("../models/Relationship");
 const { identifyUser, optionalUser } = require("../middlewares/IdentifyUser");
+const { writeLimit } = require("../middlewares/rateLimiting");
 
 const router = express.Router();
 
@@ -61,7 +62,7 @@ router.get("/shelf/:id", optionalUser, async (req, res) => {
   });
 });
 
-router.post("/shelf/:id/movie", identifyUser, async (req, res) => {
+router.post("/shelf/:id/movie", identifyUser, writeLimit, async (req, res) => {
   if (!isOwner(req)) {
     return res
       .status(403)
@@ -83,7 +84,7 @@ router.post("/shelf/:id/movie", identifyUser, async (req, res) => {
   return res.status(201).json(user.shelf.movies.at(-1));
 });
 
-router.delete("/shelf/:id/movie/:movieId", identifyUser, async (req, res) => {
+router.delete("/shelf/:id/movie/:movieId", identifyUser, writeLimit, async (req, res) => {
   if (!isOwner(req)) {
     return res
       .status(403)
@@ -106,7 +107,7 @@ router.delete("/shelf/:id/movie/:movieId", identifyUser, async (req, res) => {
   return res.status(204).end();
 });
 
-router.post("/recommend/shelf/:id/movie", identifyUser, async (req, res) => {
+router.post("/recommend/shelf/:id/movie", identifyUser, writeLimit, async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
     return res.status(400).json({ error: "Invalid user id" });
   }

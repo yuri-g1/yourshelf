@@ -2,6 +2,7 @@ const express = require("express");
 const User = require("../models/User");
 const { hashPassword, verifyPassword, verifyAgainstDummy } = require("../lib/password");
 const { createSession, destroySession } = require("../lib/sessions");
+const { signupLimit, loginLimit } = require("../middlewares/rateLimiting");
 
 const router = express.Router();
 
@@ -45,7 +46,7 @@ function publicUser(user) {
   return { _id: user._id, name: user.name };
 }
 
-router.post("/auth/signup", async (req, res) => {
+router.post("/auth/signup", signupLimit, async (req, res) => {
   const name = clean(req.body?.name);
   const email = clean(req.body?.email);
   const password = String(req.body?.password ?? "");
@@ -81,7 +82,7 @@ router.post("/auth/signup", async (req, res) => {
   return res.status(201).json(publicUser(user));
 });
 
-router.post("/auth/login", async (req, res) => {
+router.post("/auth/login", loginLimit, async (req, res) => {
   const login = clean(req.body?.login);
   const password = String(req.body?.password ?? "");
 

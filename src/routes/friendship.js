@@ -3,10 +3,11 @@ const mongoose = require("mongoose");
 const User = require("../models/User");
 const Relationship = require("../models/Relationship");
 const { identifyUser } = require("../middlewares/IdentifyUser");
+const { writeLimit } = require("../middlewares/rateLimiting");
 
 const router = express.Router();
 
-router.post("/friendship/:id", identifyUser, async (req, res) => {
+router.post("/friendship/:id", identifyUser, writeLimit, async (req, res) => {
   const me = req.user._id;
   const targetId = req.params.id;
 
@@ -56,7 +57,7 @@ router.get("/friendship", identifyUser, async (req, res) => {
   return res.json(requests.map((doc) => ({ from: doc.personId })));
 });
 
-router.post("/update-relationship-state", identifyUser, async (req, res) => {
+router.post("/update-relationship-state", identifyUser, writeLimit, async (req, res) => {
   const me = req.user._id;
   const otherId = req.body?.userId;
   const newState = req.body?.relationship_state;

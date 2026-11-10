@@ -1,6 +1,7 @@
 const express = require("express");
 const User = require("../models/User");
 const { identifyUser } = require("../middlewares/IdentifyUser");
+const { writeLimit } = require("../middlewares/rateLimiting");
 
 const router = express.Router();
 
@@ -28,7 +29,7 @@ router.get("/me", identifyUser, async (req, res) => {
   });
 });
 
-router.patch("/me/shelf", identifyUser, async (req, res) => {
+router.patch("/me/shelf", identifyUser, writeLimit, async (req, res) => {
   const visibility = req.body?.visibility;
 
   if (!["public", "private"].includes(visibility)) {
