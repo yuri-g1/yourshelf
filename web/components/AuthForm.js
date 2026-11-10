@@ -11,11 +11,20 @@ export default function AuthForm({ mode }) {
   const { user, signIn } = useAuth();
   const [form, setForm] = useState({ name: "", email: "", login: "", password: "" });
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (user) router.replace("/");
   }, [user, router]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    if (!isSignup && params.get("existing") === "1") {
+      setNotice("This email already has an account. Sign in instead.");
+    }
+  }, [isSignup]);
 
   function update(field) {
     return (event) => setForm({ ...form, [field]: event.target.value });
@@ -34,6 +43,11 @@ export default function AuthForm({ mode }) {
       await signIn(mode, credentials);
       router.replace("/");
     } catch (err) {
+      if (isSignup && err.status === 409 && err.data?.field === "email") {
+        router.push("/login?existing=1");
+        return;
+      }
+
       setError(err.message);
     } finally {
       setSaving(false);
@@ -47,6 +61,8 @@ export default function AuthForm({ mode }) {
         <p className="panel-sub">
           {isSignup ? "Pick a username your friends will find you by." : "Sign in to your shelf."}
         </p>
+
+        {notice && <div className="alert alert-info">{notice}</div>}
 
         <form className="form" onSubmit={handleSubmit}>
           {isSignup ? (

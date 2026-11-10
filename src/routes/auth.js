@@ -72,7 +72,9 @@ router.post("/auth/signup", signupLimit, async (req, res) => {
   }
 
   if (await User.exists({ email })) {
-    return res.status(409).json({ error: "This email is already in use" });
+    return res
+      .status(409)
+      .json({ error: "This email is already in use", field: "email" });
   }
 
   const passwordHash = await hashPassword(password);
