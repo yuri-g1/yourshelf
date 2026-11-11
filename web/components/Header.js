@@ -2,11 +2,74 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Avatar from "@/components/Avatar";
 import TabBar from "@/components/TabBar";
+import DockNav from "@/components/DockNav";
 import { useAuth } from "@/components/AuthProvider";
 import { api } from "@/lib/api";
+
+function UserMenu({ user, onSignOut }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function onPointer(event) {
+      if (!ref.current?.contains(event.target)) setOpen(false);
+    }
+
+    function onKey(event) {
+      if (event.key === "Escape") setOpen(false);
+    }
+
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div className="user-menu" ref={ref}>
+      <button
+        type="button"
+        className="user-trigger"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label={`Account menu for ${user.name}`}
+        onClick={() => setOpen((value) => !value)}
+      >
+        <Avatar name={user.name} />
+      </button>
+
+      {open && (
+        <div className="user-sheet" role="menu">
+          <div className="user-sheet-head">
+            <Avatar name={user.name} />
+            <div>
+              <strong>{user.name}</strong>
+              {user.email && <span>{user.email}</span>}
+            </div>
+          </div>
+          <button
+            type="button"
+            role="menuitem"
+            className="user-sheet-item"
+            onClick={() => {
+              setOpen(false);
+              onSignOut();
+            }}
+          >
+            Sign out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Header() {
   const pathname = usePathname();
@@ -30,59 +93,43 @@ export default function Header() {
     router.push("/");
   }
 
-  function navLink(href, label, badge) {
-    const active = pathname === href;
-
-    return (
-      <Link
-        href={href}
-        className={`nav-link ${active ? "active" : ""}`}
-        aria-current={active ? "page" : undefined}
-      >
-        {label}
-        {badge > 0 && <span className="nav-count">{badge}</span>}
-      </Link>
-    );
-  }
+  const links = user
+    ? [
+        { href: "/", label: "My shelf" },
+        { href: "/explore", label: "Explore" },
+        { href: "/friends", label: "Friends", badge: pending },
+      ]
+    : [{ href: "/", label: "Explore" }];
 
   return (
     <>
       <header className="header">
         <div className="container header-inner">
-          <Link href="/" aria-label="yourshelf home">
-            <img src="/logo.svg" alt="yourshelf" className="logo" />
+          <Link href="/" aria-label="yourshelf home" className="brand-logo">
+            {/* logo.svg is painted through a mask so it takes the accent color */}
+            <span className="logo-mark" aria-hidden="true" />
           </Link>
 
           {!loading && (
-            <nav className="nav" aria-label="Main">
-              {user ? (
-                <>
-                  <span className="nav-desktop">
-                    {navLink("/", "My shelf")}
-                    {navLink("/explore", "Explore")}
-                    {navLink("/friends", "Friends", pending)}
-                  </span>
-                  <div className="user-pill">
-                    <Avatar name={user.name} size="sm" />
-                    <span className="user-pill-name">{user.name}</span>
-                    <button className="btn btn-small" onClick={handleSignOut}>
-                      Sign out
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {navLink("/", "Explore")}
-                  <Link href="/login" className="btn btn-small btn-soft">
+            <>
+              <div className="dock dock-top">
+                <DockNav links={links} className="dock-nav-top" />
+              </div>
+
+              <div className="header-end">
+                {user ? (
+                  <UserMenu user={user} onSignOut={handleSignOut} />
+                ) : (
+                  <Link href="/login" className="btn btn-small">
                     Sign in
                   </Link>
-                </>
-              )}
-            </nav>
+                )}
+              </div>
+            </>
           )}
         </div>
       </header>
-      {!loading && <TabBar pending={pending} />}
+      {!loading && user && <TabBar links={links} />}
     </>
   );
 }
