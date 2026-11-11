@@ -1414,3 +1414,39 @@ button.movie:focus-visible .poster {
   background: var(--surface-2);
 }
 
+
+.kind-switch {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.kind-switch button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 26px;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  color: var(--muted);
+  opacity: 0.55;
+  cursor: pointer;
+  min-height: 44px;
+  transition: color 0.25s var(--ease), opacity 0.25s var(--ease);
+}
+
+.kind-switch button:hover {
+  opacity: 0.85;
+}
+
+.kind-switch button.active {
+  color: var(--text);
+  opacity: 1;
+}
+
+.kind-switch button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+  border-radius: 6px;
+}

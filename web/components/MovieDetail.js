@@ -6,7 +6,7 @@ import ConfirmButton from "@/components/ConfirmButton";
 import Dialog from "@/components/Dialog";
 import Poster from "@/components/Poster";
 
-export default function MovieDetail({ movie, recommenderHref, canRemove, onRemove, onClose }) {
+export default function MovieDetail({ movie, kind, recommenderHref, canRemove, onRemove, onClose }) {
   const recommender = movie?.recommendedBy;
 
   return (
@@ -14,7 +14,7 @@ export default function MovieDetail({ movie, recommenderHref, canRemove, onRemov
       {movie && (
         <div className="detail-body">
           <div className="detail-poster">
-            <Poster title={movie.title} posterPath={movie.posterPath} />
+            <Poster title={movie.title} posterPath={movie.posterPath} kind={kind} />
           </div>
 
           <div className="detail-info">

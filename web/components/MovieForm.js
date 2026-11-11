@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import MovieSearch from "@/components/MovieSearch";
 import Poster from "@/components/Poster";
+import { kindOf } from "@/lib/kinds";
 
 const EMPTY = { title: "", desc: "", note: "", externalId: "", posterPath: "", year: "" };
 
-export default function MovieForm({ title, subtitle, submitLabel, successMessage, withNote, onSubmit, onDone }) {
+export default function MovieForm({ kind, title, subtitle, submitLabel, successMessage, withNote, onSubmit, onDone }) {
+  const config = kindOf(kind);
   const [form, setForm] = useState(EMPTY);
   const [manual, setManual] = useState(false);
   const [error, setError] = useState("");
@@ -80,14 +82,14 @@ export default function MovieForm({ title, subtitle, submitLabel, successMessage
         {picked && (
           <div className="picked">
             <div className="picked-poster">
-              <Poster title={form.title} posterPath={form.posterPath} />
+              <Poster title={form.title} posterPath={form.posterPath} kind={kind} />
             </div>
             <div>
               <strong>{form.title}</strong>
               {form.year && <span className="muted"> ({form.year})</span>}
-              <p className="field-hint">From TMDB</p>
+              <p className="field-hint">From {config.source}</p>
               <button type="button" className="text-link" onClick={reset}>
-                Choose another movie
+                Choose another {config.noun}
               </button>
             </div>
           </div>
@@ -95,7 +97,7 @@ export default function MovieForm({ title, subtitle, submitLabel, successMessage
 
         {!picked && !manual && (
           <>
-            <MovieSearch onPick={pick} autoFocus />
+            <MovieSearch kind={kind} onPick={pick} autoFocus />
             <button type="button" className="text-link manual-link" onClick={() => setManual(true)}>
               Can't find it? Add it yourself
             </button>
@@ -117,20 +119,20 @@ export default function MovieForm({ title, subtitle, submitLabel, successMessage
             </div>
 
             <div className="field">
-              <label htmlFor="movie-desc">Synopsis</label>
+              <label htmlFor="movie-desc">{config.descLabel}</label>
               <textarea id="movie-desc" value={form.desc} onChange={update("desc")} maxLength={500} />
               <span className="field-hint">Optional</span>
             </div>
 
             <button type="button" className="text-link manual-link" onClick={reset}>
-              Search TMDB instead
+              Search {config.source} instead
             </button>
           </>
         )}
 
         {withNote && (picked || manual) && (
           <div className="field">
-            <label htmlFor="movie-note">Why should they watch it?</label>
+            <label htmlFor="movie-note">Why should they {config.verb} it?</label>
             <textarea
               id="movie-note"
               value={form.note}

@@ -11,6 +11,7 @@ import MovieDetail from "@/components/MovieDetail";
 import MovieForm from "@/components/MovieForm";
 import { useAuth } from "@/components/AuthProvider";
 import { useApi } from "@/lib/api";
+import { KIND_LIST, kindOf } from "@/lib/kinds";
 
 const PREVIEW_SLOTS = 12;
 
@@ -23,6 +24,7 @@ export default function ShelfView({ userId }) {
   const [relation, setRelation] = useState(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [kind, setKind] = useState("movie");
   const [tab, setTab] = useState("all");
   const [selected, setSelected] = useState(null);
   const [adding, setAdding] = useState(false);
@@ -126,9 +128,16 @@ export default function ShelfView({ userId }) {
           </p>
           {shelf && (
             <p className="profile-stats">
-              <strong>{shelf.myShelf.length}</strong> {shelf.myShelf.length === 1 ? "pick" : "picks"}
-              <span aria-hidden="true"> · </span>
-              <strong>{shelf.recommended.length}</strong> from friends
+              {KIND_LIST.map((item, index) => {
+                const total = shelf[item.key].myShelf.length + shelf[item.key].recommended.length;
+
+                return (
+                  <span key={item.key}>
+                    {index > 0 && <span aria-hidden="true"> · </span>}
+                    <strong>{total}</strong> {total === 1 ? item.noun : item.plural}
+                  </span>
+                );
+              })}
             </p>
           )}
         </div>
@@ -180,19 +189,23 @@ export default function ShelfView({ userId }) {
 
   const canRecommend = !isOwner && relation?.status === "accepted";
 
+  const config = kindOf(kind);
+  const media = shelf[kind];
+  const Noun = config.plural[0].toUpperCase() + config.plural.slice(1);
+
   const tabs = [
-    { key: "all", label: "All", list: [...shelf.myShelf, ...shelf.recommended] },
-    { key: "picks", label: isOwner ? "My picks" : "Picks", list: shelf.myShelf },
-    { key: "friends", label: "From friends", list: shelf.recommended },
+    { key: "all", label: "All", list: [...media.myShelf, ...media.recommended] },
+    { key: "picks", label: isOwner ? "My picks" : "Picks", list: media.myShelf },
+    { key: "friends", label: "From friends", list: media.recommended },
   ];
   const current = tabs.find((item) => item.key === tab) || tabs[0];
 
   const emptyCopy = {
     all: isOwner
-      ? { title: "Your shelf is empty", body: "Search for a movie and add it to your picks." }
-      : { title: "Nothing here yet", body: "Check back later." },
+      ? { title: `No ${config.plural} yet`, body: `Search for a ${config.noun} and add it to your picks.` }
+      : { title: `No ${config.plural} yet`, body: "Check back later." },
     picks: isOwner
-      ? { title: "No picks yet", body: "Movies you add yourself show up here." }
+      ? { title: "No picks yet", body: `${Noun} you add yourself show up here.` }
       : { title: "No picks yet", body: `${owner.name} has not added anything yet.` },
     friends: isOwner
       ? { title: "No recommendations yet", body: "When friends recommend something, it shows up here." }
@@ -200,7 +213,7 @@ export default function ShelfView({ userId }) {
   }[current.key];
 
   const addTile =
-    (isOwner && current.key !== "friends" && { label: "Add a movie" }) ||
+    (isOwner && current.key !== "friends" && { label: `Add a ${config.noun}` }) ||
     (canRecommend && current.key !== "picks" && { label: `Recommend to ${owner.name}` }) ||
     null;
   const limit = addTile ? PREVIEW_SLOTS - 1 : PREVIEW_SLOTS;
@@ -208,6 +221,24 @@ export default function ShelfView({ userId }) {
 
   const library = (
     <section className="shelf-section">
+      <div className="kind-switch" role="group" aria-label="Shelf type">
+        {KIND_LIST.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            aria-pressed={kind === item.key}
+            className={kind === item.key ? "active" : ""}
+            onClick={() => {
+              setKind(item.key);
+              setTab("all");
+              setExpanded(false);
+            }}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
       <div className="tabs" role="tablist" aria-label="Shelf sections">
         {tabs.map((item) => (
           <button
@@ -237,9 +268,9 @@ export default function ShelfView({ userId }) {
       {(visible.length > 0 || addTile) && (
         <div className="movies" role="tabpanel">
           {visible.map((movie) => (
-            <MovieCard key={movie._id} movie={movie} onOpen={setSelected} />
+            <MovieCard key={movie._id} movie={movie} kind={kind} onOpen={setSelected} />
           ))}
-          {addTile && <AddTile label={addTile.label} onClick={() => setAdding(true)} />}
+          {addTile && <AddTile label={addTile.label} source={config.source} onClick={() => setAdding(true)} />}
         </div>
       )}
 
@@ -269,13 +300,15 @@ export default function ShelfView({ userId }) {
       <Dialog open={adding} onClose={() => setAdding(false)} labelledBy="add-title" className="add-dialog">
         {isOwner ? (
           <MovieForm
-            title="Add a movie"
+            key={kind}
+            kind={kind}
+            title={`Add a ${config.noun}`}
             subtitle="It goes straight to your picks."
             submitLabel="Add to shelf"
             successMessage="Added. Add another or press Done."
             onDone={() => setAdding(false)}
             onSubmit={(form) =>
-              api(`/shelf/${ownerId}/movie`, {
+              api(`/shelf/${ownerId}/${kind}`, {
                 method: "POST",
                 body: {
                   title: form.title,
@@ -288,14 +321,16 @@ export default function ShelfView({ userId }) {
           />
         ) : (
           <MovieForm
-            title={`Recommend to ${owner.name}`}
+            key={kind}
+            kind={kind}
+            title={`Recommend a ${config.noun} to ${owner.name}`}
             subtitle="It appears on their shelf with your note."
             submitLabel="Recommend"
             successMessage={`Sent to ${owner.name}. Recommend another or press Done.`}
             withNote
             onDone={() => setAdding(false)}
             onSubmit={(form) =>
-              api(`/recommend/shelf/${ownerId}/movie`, {
+              api(`/recommend/shelf/${ownerId}/${kind}`, {
                 method: "POST",
                 body: {
                   title: form.title,
@@ -312,9 +347,10 @@ export default function ShelfView({ userId }) {
 
       <MovieDetail
         movie={selected}
+        kind={kind}
         recommenderHref={selected?.recommendedBy ? hrefFor(selected.recommendedBy._id) : null}
         canRemove={isOwner}
-        onRemove={(item) => run(() => api(`/shelf/${ownerId}/movie/${item._id}`, { method: "DELETE" }))}
+        onRemove={(item) => run(() => api(`/shelf/${ownerId}/${kind}/${item._id}`, { method: "DELETE" }))}
         onClose={() => setSelected(null)}
       />
     </>

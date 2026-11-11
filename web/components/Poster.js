@@ -1,13 +1,12 @@
+import { kindOf } from "@/lib/kinds";
 import { toneOf } from "@/lib/tone";
 
-const IMAGE_BASE = "https://image.tmdb.org/t/p/w342";
-
-export default function Poster({ title, posterPath }) {
+export default function Poster({ title, posterPath, kind }) {
   if (posterPath) {
     return (
       <img
         className="poster poster-image"
-        src={`${IMAGE_BASE}${posterPath}`}
+        src={kindOf(kind).image(posterPath)}
         alt={`Poster of ${title}`}
         loading="lazy"
       />

@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { kindOf } from "@/lib/kinds";
 
-const IMAGE_BASE = "https://image.tmdb.org/t/p/w92";
-
-export default function MovieSearch({ onPick, autoFocus }) {
+export default function MovieSearch({ kind, onPick, autoFocus }) {
+  const config = kindOf(kind);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [status, setStatus] = useState("idle");
@@ -23,7 +23,7 @@ export default function MovieSearch({ onPick, autoFocus }) {
     setStatus("loading");
 
     const timer = setTimeout(() => {
-      api(`/movies/search?q=${encodeURIComponent(term)}`)
+      api(`${config.searchPath}?q=${encodeURIComponent(term)}`)
         .then((list) => {
           if (!active) return;
           setResults(list);
@@ -36,7 +36,7 @@ export default function MovieSearch({ onPick, autoFocus }) {
       active = false;
       clearTimeout(timer);
     };
-  }, [query]);
+  }, [query, config.searchPath]);
 
   function pick(movie) {
     onPick(movie);
@@ -47,21 +47,21 @@ export default function MovieSearch({ onPick, autoFocus }) {
 
   return (
     <div className="field">
-      <label htmlFor="movie-search">Search for a movie</label>
+      <label htmlFor="movie-search">Search for a {config.noun}</label>
       <input
         id="movie-search"
         type="search"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         onKeyDown={(event) => event.key === "Escape" && setQuery("")}
-        placeholder="The Matrix, Spirited Away..."
+        placeholder={config.placeholder}
         autoComplete="off"
         data-autofocus={autoFocus || undefined}
       />
 
       <span className="field-hint" role="status">
         {status === "loading" && "Searching..."}
-        {status === "empty" && "No movies found. You can add it yourself."}
+        {status === "empty" && `No ${config.plural} found. You can add it yourself.`}
         {status === "error" && "Search is unavailable right now. You can add it yourself."}
       </span>
 
@@ -71,7 +71,7 @@ export default function MovieSearch({ onPick, autoFocus }) {
             <li key={movie.externalId}>
               <button type="button" className="search-result" onClick={() => pick(movie)}>
                 {movie.posterPath ? (
-                  <img src={`${IMAGE_BASE}${movie.posterPath}`} alt="" loading="lazy" />
+                  <img src={config.image(movie.posterPath, "small")} alt="" loading="lazy" />
                 ) : (
                   <span className="search-result-blank" />
                 )}

@@ -29,7 +29,11 @@ export default function RootLayout({ children }) {
               <a href="https://www.themoviedb.org" target="_blank" rel="noopener noreferrer">
                 TMDB
               </a>
-              . This product uses the TMDB API but is not endorsed or certified by TMDB.
+              . This product uses the TMDB API but is not endorsed or certified by TMDB. Game data and covers from{" "}
+              <a href="https://www.igdb.com" target="_blank" rel="noopener noreferrer">
+                IGDB
+              </a>
+              .
             </div>
           </footer>
         </AuthProvider>

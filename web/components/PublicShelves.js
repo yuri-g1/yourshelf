@@ -7,6 +7,7 @@ import Loading from "@/components/Loading";
 import Poster from "@/components/Poster";
 import { useAuth } from "@/components/AuthProvider";
 import { useApi } from "@/lib/api";
+import { KIND_LIST } from "@/lib/kinds";
 
 export default function PublicShelves() {
   const api = useApi();
@@ -84,8 +85,10 @@ export default function PublicShelves() {
 const STRIP = 4;
 
 function PersonCard({ user }) {
-  const preview = user.preview || { picks: 0, recommended: 0, posters: [] };
-  const total = preview.picks + preview.recommended;
+  const preview = user.preview || { counts: {}, recommended: 0, posters: [] };
+  const counts = KIND_LIST.map((kind) => ({ kind, count: preview.counts[kind.key] || 0 })).filter(
+    ({ count }) => count > 0,
+  );
   const slots = Array.from({ length: STRIP }, (_, index) => preview.posters[index]);
 
   return (
@@ -95,9 +98,9 @@ function PersonCard({ user }) {
         <div>
           <span className="person-card-name">{user.name}</span>
           <p className="person-stats">
-            {total === 0
+            {counts.length === 0
               ? "Empty shelf"
-              : `${preview.picks} ${preview.picks === 1 ? "pick" : "picks"} · ${preview.recommended} from friends`}
+              : counts.map(({ kind, count }) => `${count} ${count === 1 ? kind.noun : kind.plural}`).join(" · ")}
           </p>
         </div>
       </div>
@@ -105,7 +108,7 @@ function PersonCard({ user }) {
       <div className="person-posters" aria-hidden="true">
         {slots.map((movie, index) =>
           movie ? (
-            <Poster key={index} title={movie.title} posterPath={movie.posterPath} />
+            <Poster key={index} title={movie.title} posterPath={movie.posterPath} kind={movie.kind} />
           ) : (
             <span key={index} className="person-posters-empty" />
           ),
