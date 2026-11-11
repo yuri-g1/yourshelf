@@ -8,7 +8,9 @@ export default function MovieCard({ movie, kind, onOpen }) {
       <Poster title={movie.title} posterPath={movie.posterPath} kind={kind} />
       <span className="movie-title">{movie.title}</span>
       <span className="movie-meta">
-        {recommender ? `from ${recommender.name}` : movie.year || "Your pick"}
+        {recommender
+          ? `from ${recommender.name}`
+          : [movie.year, movie.creator].filter(Boolean).join(" · ") || "Your pick"}
       </span>
     </button>
   );

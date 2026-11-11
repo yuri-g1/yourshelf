@@ -4,7 +4,7 @@ const User = require("../models/User");
 const Relationship = require("../models/Relationship");
 const { identifyUser, optionalUser } = require("../middlewares/IdentifyUser");
 const { writeLimit } = require("../middlewares/rateLimiting");
-const { catalogs, catalogFor, withLiveData } = require("../lib/catalogs");
+const { catalogs, catalogFor, withLiveData, withDetails } = require("../lib/catalogs");
 
 const router = express.Router();
 
@@ -16,6 +16,7 @@ function pickItemFields(body) {
     title: body?.title,
     desc: body?.desc,
     posterPath: body?.posterPath || undefined,
+    creator: body?.creator || undefined,
   };
 }
 
@@ -100,7 +101,7 @@ router.post("/shelf/:id/:kind", identifyUser, writeLimit, requireCatalog, async 
     });
   }
 
-  user.shelf[field].push(pickItemFields(req.body));
+  user.shelf[field].push(await withDetails(req.catalog, pickItemFields(req.body)));
   await user.save();
 
   return res.status(201).json(user.shelf[field].at(-1));
@@ -163,7 +164,7 @@ router.post("/recommend/shelf/:id/:kind", identifyUser, writeLimit, requireCatal
   }
 
   owner.shelf[field].push({
-    ...pickItemFields(req.body),
+    ...(await withDetails(req.catalog, pickItemFields(req.body))),
     recommendationText: req.body?.recommendationText,
     recommendedBy: req.user._id,
   });

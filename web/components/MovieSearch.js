@@ -78,6 +78,7 @@ export default function MovieSearch({ kind, onPick, autoFocus }) {
                 <span>
                   <strong>{movie.title}</strong>
                   {movie.year && <span className="muted"> ({movie.year})</span>}
+                  {movie.creator && <span className="search-result-creator">{movie.creator}</span>}
                 </span>
               </button>
             </li>

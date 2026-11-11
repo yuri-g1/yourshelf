@@ -5,6 +5,8 @@ const Relationship = require("../src/models/Relationship");
 const { hashPassword } = require("../src/lib/password");
 const tmdb = require("../src/lib/tmdb");
 const igdb = require("../src/lib/igdb");
+const openlibrary = require("../src/lib/openlibrary");
+const deezer = require("../src/lib/deezer");
 
 const PEOPLE = [
   {
@@ -174,6 +176,137 @@ const GAME_RECOMMENDATIONS = [
   ["lu_after_dark", "rafa_noir", ["Heavy Rain", "2010"], null],
 ];
 
+const BOOKS = {
+  marina_cine: [
+    ["Normal People", "Sally Rooney"],
+    ["Never Let Me Go", "Kazuo Ishiguro"],
+    ["The Bell Jar", "Sylvia Plath"],
+  ],
+  theo_rewinds: [
+    ["Jurassic Park", "Michael Crichton"],
+    ["The Hitchhiker's Guide to the Galaxy", "Douglas Adams"],
+    ["Ready Player One", "Ernest Cline"],
+  ],
+  kenji_frames: [
+    ["Kafka on the Shore", "Haruki Murakami"],
+    ["Norwegian Wood", "Haruki Murakami"],
+    ["Convenience Store Woman", "Sayaka Murata"],
+  ],
+  lu_after_dark: [
+    ["It", "Stephen King"],
+    ["The Haunting of Hill House", "Shirley Jackson"],
+    ["Frankenstein", "Mary Shelley"],
+    ["Mexican Gothic", "Silvia Moreno-Garcia"],
+  ],
+  bia_meetcute: [
+    ["Pride and Prejudice", "Jane Austen"],
+    ["Beach Read", "Emily Henry"],
+    ["Me Before You", "Jojo Moyes"],
+  ],
+  rafa_noir: [
+    ["The Big Sleep", "Raymond Chandler"],
+    ["The Long Goodbye", "Raymond Chandler"],
+    ["Gone Girl", "Gillian Flynn"],
+  ],
+  dani_docs: [
+    ["Sapiens", "Yuval Noah Harari"],
+    ["Educated", "Tara Westover"],
+  ],
+};
+
+const BOOK_RECOMMENDATIONS = [
+  ["marina_cine", "kenji_frames", ["Klara and the Sun", "Kazuo Ishiguro"], "Ishiguro again. Quiet and devastating."],
+  ["bia_meetcute", "marina_cine", ["Rebecca", "Daphne du Maurier"], "Gothic, moody, and that opening line."],
+  ["kenji_frames", "theo_rewinds", ["Project Hail Mary", "Andy Weir"], "Pure fun sci-fi. You will fly through it."],
+  ["lu_after_dark", "kenji_frames", ["Ring", "Koji Suzuki"], "The book is even creepier than the movie."],
+  ["rafa_noir", "lu_after_dark", ["In Cold Blood", "Truman Capote"], "True crime that reads like a novel."],
+  ["dani_docs", "bia_meetcute", ["The Martian", "Andy Weir"], null],
+  ["bia_meetcute", "dani_docs", ["Know My Name", "Chanel Miller"], "Hard to read, impossible to put down."],
+];
+
+async function findBook([title, author]) {
+  const results = await openlibrary.searchBooks(`${title} ${author}`);
+  const match = results.find((book) => plain(book.title) === plain(title)) || results[0];
+
+  if (!match) throw new Error(`No Open Library result for ${title}`);
+
+  return {
+    externalId: match.externalId,
+    title: match.title,
+    desc: (await openlibrary.describeBook(match.externalId)) || undefined,
+    posterPath: match.posterPath || undefined,
+    creator: match.creator || undefined,
+  };
+}
+
+const ALBUMS = {
+  marina_cine: [
+    ["Blonde", "Frank Ocean"],
+    ["Punisher", "Phoebe Bridgers"],
+    ["Melodrama", "Lorde"],
+  ],
+  theo_rewinds: [
+    ["Thriller", "Michael Jackson"],
+    ["Back In Black", "AC/DC"],
+    ["Purple Rain", "Prince"],
+    ["Rumours", "Fleetwood Mac"],
+  ],
+  kenji_frames: [
+    ["Spirited Away", "Joe Hisaishi"],
+    ["Cowboy Bebop", "Seatbelts"],
+    ["Fantasma", "Cornelius"],
+  ],
+  lu_after_dark: [
+    ["The Downward Spiral", "Nine Inch Nails"],
+    ["Disintegration", "The Cure"],
+    ["Mezzanine", "Massive Attack"],
+  ],
+  bia_meetcute: [
+    ["Lover", "Taylor Swift"],
+    ["Future Nostalgia", "Dua Lipa"],
+    ["Emotion", "Carly Rae Jepsen"],
+  ],
+  rafa_noir: [
+    ["Kind of Blue", "Miles Davis"],
+    ["Blade Runner", "Vangelis"],
+    ["Dummy", "Portishead"],
+  ],
+  dani_docs: [
+    ["Random Access Memories", "Daft Punk"],
+    ["In Rainbows", "Radiohead"],
+  ],
+};
+
+const ALBUM_RECOMMENDATIONS = [
+  ["theo_rewinds", "marina_cine", ["OK Computer", "Radiohead"], "Start with Paranoid Android. Thank me later."],
+  ["marina_cine", "bia_meetcute", ["Norman Fucking Rockwell!", "Lana Del Rey"], "Perfect for a long drive at sunset."],
+  ["lu_after_dark", "kenji_frames", ["In the Aeroplane Over the Sea", "Neutral Milk Hotel"], "Weird and beautiful. Give it two listens."],
+  ["kenji_frames", "theo_rewinds", ["Discovery", "Daft Punk"], "It even has its own anime movie."],
+  ["rafa_noir", "lu_after_dark", ["Third", "Portishead"], "Rainy night music."],
+  ["dani_docs", "bia_meetcute", ["Currents", "Tame Impala"], "For dancing alone in the kitchen."],
+  ["bia_meetcute", "dani_docs", ["Emotion", "Carly Rae Jepsen"], "Pure pop joy, no skips."],
+];
+
+async function findAlbum([title, artist]) {
+  const results = await deezer.searchAlbums(`${title} ${artist}`);
+  const byArtist = (album) => plain(album.creator || "") === plain(artist);
+  const match =
+    results.find((album) => byArtist(album) && plain(album.title) === plain(title)) ||
+    results.find((album) => byArtist(album) && plain(album.title).startsWith(plain(title))) ||
+    results.find(byArtist) ||
+    results[0];
+
+  if (!match) throw new Error(`No Deezer result for ${title}`);
+
+  return {
+    externalId: match.externalId,
+    title: match.title,
+    desc: (await deezer.describeAlbum(match.externalId)) || undefined,
+    posterPath: match.posterPath || undefined,
+    creator: match.creator || undefined,
+  };
+}
+
 function plain(text) {
   return text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 }
@@ -256,24 +389,24 @@ async function createPeople() {
   return users;
 }
 
-async function addGames(users) {
-  const fresh = Object.keys(GAMES).filter((name) => users[name] && users[name].shelf.games.length === 0);
+async function addCatalog(users, { field, plural, picks, recommendations, find }) {
+  const fresh = Object.keys(picks).filter((name) => users[name] && users[name].shelf[field].length === 0);
 
   if (fresh.length === 0) {
-    console.log("Demo games already exist. Nothing to do.");
+    console.log(`Demo ${plural} already exist. Nothing to do.`);
     return;
   }
 
   for (const name of fresh) {
-    for (const pick of GAMES[name]) users[name].shelf.games.push(await findGame(pick));
-    console.log(`Added ${GAMES[name].length} games to ${name}`);
+    for (const pick of picks[name]) users[name].shelf[field].push(await find(pick));
+    console.log(`Added ${picks[name].length} ${plural} to ${name}`);
   }
 
-  const recommendations = GAME_RECOMMENDATIONS.filter(([, to]) => fresh.includes(to));
+  const incoming = recommendations.filter(([, to]) => fresh.includes(to));
 
-  for (const [from, to, pick, note] of recommendations) {
-    users[to].shelf.games.push({
-      ...(await findGame(pick)),
+  for (const [from, to, pick, note] of incoming) {
+    users[to].shelf[field].push({
+      ...(await find(pick)),
       recommendedBy: users[from]._id,
       recommendationText: note || undefined,
     });
@@ -281,7 +414,7 @@ async function addGames(users) {
 
   for (const name of fresh) await users[name].save();
 
-  console.log(`Created ${recommendations.length} game recommendations`);
+  console.log(`Created ${incoming.length} ${plural.slice(0, -1)} recommendations`);
 }
 
 async function main() {
@@ -301,7 +434,27 @@ async function main() {
     console.log(`Demo users already exist (${existing.length}). Skipping movies.`);
   }
 
-  await addGames(users);
+  await addCatalog(users, {
+    field: "games",
+    plural: "games",
+    picks: GAMES,
+    recommendations: GAME_RECOMMENDATIONS,
+    find: findGame,
+  });
+  await addCatalog(users, {
+    field: "books",
+    plural: "books",
+    picks: BOOKS,
+    recommendations: BOOK_RECOMMENDATIONS,
+    find: findBook,
+  });
+  await addCatalog(users, {
+    field: "albums",
+    plural: "albums",
+    picks: ALBUMS,
+    recommendations: ALBUM_RECOMMENDATIONS,
+    find: findAlbum,
+  });
 }
 
 main()

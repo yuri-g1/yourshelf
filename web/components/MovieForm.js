@@ -5,7 +5,7 @@ import MovieSearch from "@/components/MovieSearch";
 import Poster from "@/components/Poster";
 import { kindOf } from "@/lib/kinds";
 
-const EMPTY = { title: "", desc: "", note: "", externalId: "", posterPath: "", year: "" };
+const EMPTY = { title: "", desc: "", note: "", externalId: "", posterPath: "", year: "", creator: "" };
 
 export default function MovieForm({ kind, title, subtitle, submitLabel, successMessage, withNote, onSubmit, onDone }) {
   const config = kindOf(kind);
@@ -33,6 +33,7 @@ export default function MovieForm({ kind, title, subtitle, submitLabel, successM
       externalId: movie.externalId,
       posterPath: movie.posterPath || "",
       year: movie.year || "",
+      creator: movie.creator || "",
     });
     setManual(false);
   }
@@ -87,6 +88,7 @@ export default function MovieForm({ kind, title, subtitle, submitLabel, successM
             <div>
               <strong>{form.title}</strong>
               {form.year && <span className="muted"> ({form.year})</span>}
+              {form.creator && <p className="picked-creator">by {form.creator}</p>}
               <p className="field-hint">From {config.source}</p>
               <button type="button" className="text-link" onClick={reset}>
                 Choose another {config.noun}
@@ -117,6 +119,14 @@ export default function MovieForm({ kind, title, subtitle, submitLabel, successM
                 required
               />
             </div>
+
+            {config.creatorLabel && (
+              <div className="field">
+                <label htmlFor="movie-creator">{config.creatorLabel}</label>
+                <input id="movie-creator" value={form.creator} onChange={update("creator")} maxLength={100} />
+                <span className="field-hint">Optional</span>
+              </div>
+            )}
 
             <div className="field">
               <label htmlFor="movie-desc">{config.descLabel}</label>

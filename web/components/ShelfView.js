@@ -270,7 +270,12 @@ export default function ShelfView({ userId }) {
           {visible.map((movie) => (
             <MovieCard key={movie._id} movie={movie} kind={kind} onOpen={setSelected} />
           ))}
-          {addTile && <AddTile label={addTile.label} source={config.source} onClick={() => setAdding(true)} />}
+          {addTile && <AddTile
+              label={addTile.label}
+              source={config.source}
+              square={config.square}
+              onClick={() => setAdding(true)}
+            />}
         </div>
       )}
 
@@ -315,6 +320,7 @@ export default function ShelfView({ userId }) {
                   desc: form.desc,
                   externalId: form.externalId,
                   posterPath: form.posterPath,
+                  creator: form.creator,
                 },
               }).then(load)
             }
@@ -337,6 +343,7 @@ export default function ShelfView({ userId }) {
                   desc: form.desc,
                   externalId: form.externalId,
                   posterPath: form.posterPath,
+                  creator: form.creator,
                   recommendationText: form.note,
                 },
               }).then(load)

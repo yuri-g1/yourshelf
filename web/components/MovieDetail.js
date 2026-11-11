@@ -23,6 +23,8 @@ export default function MovieDetail({ movie, kind, recommenderHref, canRemove, o
               {movie.year && <span className="movie-year"> ({movie.year})</span>}
             </h2>
 
+            {movie.creator && <p className="detail-creator">by {movie.creator}</p>}
+
             {recommender && (
               <div className="movie-from">
                 <Avatar name={recommender.name} size="sm" />

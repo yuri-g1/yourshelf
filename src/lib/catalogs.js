@@ -1,5 +1,7 @@
 const tmdb = require("./tmdb");
 const igdb = require("./igdb");
+const openlibrary = require("./openlibrary");
+const deezer = require("./deezer");
 
 const MOVIE_BATCH_SIZE = 10;
 
@@ -40,6 +42,28 @@ const catalogs = {
     getMany: igdb.getGames,
     isSourceError: (error) => error instanceof igdb.IgdbError,
   },
+  book: {
+    field: "books",
+    noun: "book",
+    plural: "books",
+    source: "Open Library",
+    isConfigured: openlibrary.isConfigured,
+    search: openlibrary.searchBooks,
+    getMany: openlibrary.getBooks,
+    describe: openlibrary.describeBook,
+    isSourceError: (error) => error instanceof openlibrary.OpenLibraryError,
+  },
+  album: {
+    field: "albums",
+    noun: "album",
+    plural: "albums",
+    source: "Deezer",
+    isConfigured: deezer.isConfigured,
+    search: deezer.searchAlbums,
+    getMany: deezer.getAlbums,
+    describe: deezer.describeAlbum,
+    isSourceError: (error) => error instanceof deezer.DeezerError,
+  },
 };
 
 function catalogFor(kind) {
@@ -71,8 +95,20 @@ async function withLiveData(catalog, items) {
       desc: fresh.desc || item.desc,
       posterPath: fresh.posterPath || item.posterPath,
       year: fresh.year,
+      creator: fresh.creator || item.creator,
     };
   });
 }
 
-module.exports = { catalogs, catalogFor, withLiveData };
+async function withDetails(catalog, fields) {
+  if (!catalog.describe || !fields.externalId || fields.desc) return fields;
+
+  try {
+    return { ...fields, desc: await catalog.describe(fields.externalId) };
+  } catch (error) {
+    console.error(`${catalog.source} details failed:`, error.message);
+    return fields;
+  }
+}
+
+module.exports = { catalogs, catalogFor, withLiveData, withDetails };

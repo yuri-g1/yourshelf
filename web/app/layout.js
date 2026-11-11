@@ -33,6 +33,14 @@ export default function RootLayout({ children }) {
               <a href="https://www.igdb.com" target="_blank" rel="noopener noreferrer">
                 IGDB
               </a>
+              . Book data and covers from{" "}
+              <a href="https://openlibrary.org" target="_blank" rel="noopener noreferrer">
+                Open Library
+              </a>
+              . Album data and covers from{" "}
+              <a href="https://www.deezer.com" target="_blank" rel="noopener noreferrer">
+                Deezer
+              </a>
               .
             </div>
           </footer>

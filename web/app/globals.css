@@ -1450,3 +1450,44 @@ button.movie:focus-visible .poster {
   outline-offset: 4px;
   border-radius: 6px;
 }
+
+.picked-creator,
+.detail-creator {
+  margin: 2px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.search-result-creator {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.poster.poster-square,
+.add-tile-poster.poster-square {
+  aspect-ratio: 1 / 1;
+}
+
+.person-posters .poster.poster-square {
+  aspect-ratio: 2 / 3;
+}
+
+.kind-switch {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.kind-switch button {
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .kind-switch {
+    gap: 16px;
+  }
+
+  .kind-switch button {
+    font-size: 21px;
+  }
+}
