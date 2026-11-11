@@ -2,6 +2,7 @@ const express = require("express");
 const User = require("../models/User");
 const { identifyUser } = require("../middlewares/IdentifyUser");
 const { writeLimit } = require("../middlewares/rateLimiting");
+const { catalogs } = require("../lib/catalogs");
 
 const router = express.Router();
 
@@ -12,21 +13,32 @@ function visibilityOf(user) {
 const PREVIEW_SIZE = 4;
 
 function previewOf(user) {
-  const movies = user.shelf?.movies ?? [];
+  const preview = { counts: {}, recommended: 0, posters: [] };
+  const added = [];
 
-  return {
-    picks: movies.filter((movie) => !movie.recommendedBy).length,
-    recommended: movies.filter((movie) => movie.recommendedBy).length,
-    posters: movies
-      .slice(-PREVIEW_SIZE)
-      .reverse()
-      .map((movie) => ({ title: movie.title, posterPath: movie.posterPath || null })),
-  };
+  for (const [kind, catalog] of Object.entries(catalogs)) {
+    const items = user.shelf?.[catalog.field] ?? [];
+
+    preview.counts[kind] = items.length;
+    preview.recommended += items.filter((item) => item.recommendedBy).length;
+    added.push(...items.map((item) => ({ kind, item })));
+  }
+
+  preview.posters = added
+    .sort((a, b) => String(b.item._id).localeCompare(String(a.item._id)))
+    .slice(0, PREVIEW_SIZE)
+    .map(({ kind, item }) => ({ kind, title: item.title, posterPath: item.posterPath || null }));
+
+  return preview;
 }
+
+const PREVIEW_FIELDS = Object.values(catalogs)
+  .map(({ field }) => `shelf.${field}._id shelf.${field}.title shelf.${field}.posterPath shelf.${field}.recommendedBy`)
+  .join(" ");
 
 router.get("/users", async (req, res) => {
   const users = await User.find()
-    .select("name shelf.visibility shelf.movies.title shelf.movies.posterPath shelf.movies.recommendedBy")
+    .select(`name shelf.visibility ${PREVIEW_FIELDS}`)
     .sort("name");
 
   return res.json(

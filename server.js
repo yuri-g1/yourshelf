@@ -4,7 +4,7 @@ const authRouter = require("./src/routes/auth");
 const usersRouter = require("./src/routes/users");
 const shelfRouter = require("./src/routes/shelf");
 const friendshipRouter = require("./src/routes/friendship");
-const moviesRouter = require("./src/routes/movies");
+const searchRouter = require("./src/routes/search");
 const errorHandler = require("./src/middlewares/errorHandler");
 
 const app = express();
@@ -21,7 +21,7 @@ app.use(authRouter);
 app.use(usersRouter);
 app.use(shelfRouter);
 app.use(friendshipRouter);
-app.use(moviesRouter);
+app.use(searchRouter);
 
 app.use((req, res) => {
   res.status(404).json({ error: "Route not found" });

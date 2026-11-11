@@ -4,6 +4,7 @@ const User = require("../src/models/User");
 const Relationship = require("../src/models/Relationship");
 const { hashPassword } = require("../src/lib/password");
 const tmdb = require("../src/lib/tmdb");
+const igdb = require("../src/lib/igdb");
 
 const PEOPLE = [
   {
@@ -122,6 +123,80 @@ const RECOMMENDATIONS = [
   ["lu_after_dark", "rafa_noir", ["Get Out", "2017"], "Sharp as a thriller first, horror second."],
 ];
 
+const GAMES = {
+  marina_cine: [
+    ["Gris", "2018"],
+    ["Journey", "2012"],
+    ["What Remains of Edith Finch", "2017"],
+    ["Outer Wilds", "2019"],
+  ],
+  theo_rewinds: [
+    ["Super Mario Bros. 3", "1988"],
+    ["The Legend of Zelda: A Link to the Past", "1991"],
+    ["Chrono Trigger", "1995"],
+    ["Doom", "1993"],
+    ["Street Fighter II: The World Warrior", "1991"],
+  ],
+  kenji_frames: [
+    ["Persona 5", "2016"],
+    ["Final Fantasy VII", "1997"],
+    ["Okami", "2006"],
+    ["Sekiro: Shadows Die Twice", "2019"],
+    ["Ni no Kuni: Wrath of the White Witch", "2011"],
+  ],
+  lu_after_dark: [
+    ["Silent Hill 2", "2001"],
+    ["Resident Evil 4", "2005"],
+    ["Dead Space", "2008"],
+    ["Amnesia: The Dark Descent", "2010"],
+    ["Inside", "2016"],
+  ],
+  bia_meetcute: [
+    ["Stardew Valley", "2016"],
+    ["Animal Crossing: New Horizons", "2020"],
+    ["Unpacking", "2021"],
+  ],
+  rafa_noir: [
+    ["L.A. Noire", "2011"],
+    ["Disco Elysium", "2019"],
+    ["Max Payne", "2001"],
+  ],
+};
+
+const GAME_RECOMMENDATIONS = [
+  ["kenji_frames", "marina_cine", ["Spiritfarer", "2020"], "Cozy and sad in the best way. Bring tissues."],
+  ["theo_rewinds", "marina_cine", ["Celeste", "2018"], "Pixel art platformer with a huge heart."],
+  ["theo_rewinds", "kenji_frames", ["Chrono Cross", "1999"], "If you liked Chrono Trigger art, this soundtrack will get you."],
+  ["kenji_frames", "theo_rewinds", ["Hollow Knight", "2017"], "Hard like the NES days, but always fair."],
+  ["kenji_frames", "lu_after_dark", ["A Short Hike", "2019"], "You need a break from all the horror. Trust me."],
+  ["rafa_noir", "lu_after_dark", ["Return of the Obra Dinn", "2018"], "A murder mystery you solve with a pocket watch."],
+  ["marina_cine", "bia_meetcute", ["Florence", "2018"], "Twenty minutes, one love story, almost no words."],
+  ["lu_after_dark", "rafa_noir", ["Heavy Rain", "2010"], null],
+];
+
+function plain(text) {
+  return text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+}
+
+async function findGame([title, year]) {
+  const results = await igdb.searchGames(title);
+  const sameTitle = (game) => plain(game.title) === plain(title);
+  const match =
+    results.find((game) => sameTitle(game) && game.year === year) ||
+    results.find(sameTitle) ||
+    results.find((game) => game.year === year) ||
+    results[0];
+
+  if (!match) throw new Error(`No IGDB result for ${title}`);
+
+  return {
+    externalId: match.externalId,
+    title: match.title,
+    desc: match.desc,
+    posterPath: match.posterPath || undefined,
+  };
+}
+
 async function findMovie([title, year]) {
   const results = await tmdb.searchMovies(title);
   const sameTitle = (movie) => movie.title.toLowerCase() === title.toLowerCase();
@@ -140,19 +215,7 @@ async function findMovie([title, year]) {
   };
 }
 
-async function main() {
-  if (!tmdb.isConfigured()) throw new Error("TMDB_API_KEY is not set");
-
-  await mongoose.connect(process.env.MONGODB_URL);
-
-  const names = PEOPLE.map((person) => person.name);
-  const existing = await User.find({ name: { $in: names } }).select("name");
-
-  if (existing.length > 0) {
-    console.log(`Demo users already exist (${existing.map((user) => user.name).join(", ")}). Nothing to do.`);
-    return;
-  }
-
+async function createPeople() {
   const users = {};
 
   for (const person of PEOPLE) {
@@ -180,18 +243,65 @@ async function main() {
   console.log(`Created ${FRIENDS.length} friendships`);
 
   for (const [from, to, pick, note] of RECOMMENDATIONS) {
-    const movie = await findMovie(pick);
-    const owner = users[to];
-
-    owner.shelf.movies.push({
-      ...movie,
+    users[to].shelf.movies.push({
+      ...(await findMovie(pick)),
       recommendedBy: users[from]._id,
       recommendationText: note || undefined,
     });
-    await owner.save();
+    await users[to].save();
   }
 
-  console.log(`Created ${RECOMMENDATIONS.length} recommendations`);
+  console.log(`Created ${RECOMMENDATIONS.length} movie recommendations`);
+
+  return users;
+}
+
+async function addGames(users) {
+  const fresh = Object.keys(GAMES).filter((name) => users[name] && users[name].shelf.games.length === 0);
+
+  if (fresh.length === 0) {
+    console.log("Demo games already exist. Nothing to do.");
+    return;
+  }
+
+  for (const name of fresh) {
+    for (const pick of GAMES[name]) users[name].shelf.games.push(await findGame(pick));
+    console.log(`Added ${GAMES[name].length} games to ${name}`);
+  }
+
+  const recommendations = GAME_RECOMMENDATIONS.filter(([, to]) => fresh.includes(to));
+
+  for (const [from, to, pick, note] of recommendations) {
+    users[to].shelf.games.push({
+      ...(await findGame(pick)),
+      recommendedBy: users[from]._id,
+      recommendationText: note || undefined,
+    });
+  }
+
+  for (const name of fresh) await users[name].save();
+
+  console.log(`Created ${recommendations.length} game recommendations`);
+}
+
+async function main() {
+  if (!tmdb.isConfigured()) throw new Error("TMDB_API_KEY is not set");
+  if (!igdb.isConfigured()) throw new Error("TWITCH_CLIENT_ID or TWITCH_CLIENT_SECRET is not set");
+
+  await mongoose.connect(process.env.MONGODB_URL);
+
+  const names = PEOPLE.map((person) => person.name);
+  const existing = await User.find({ name: { $in: names } });
+  let users;
+
+  if (existing.length === 0) {
+    users = await createPeople();
+  } else {
+    users = Object.fromEntries(existing.map((user) => [user.name, user]));
+    console.log(`Demo users already exist (${existing.length}). Skipping movies.`);
+  }
+
+  await addGames(users);
 }
 
 main()
