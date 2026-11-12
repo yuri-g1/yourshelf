@@ -13,9 +13,6 @@ async function getMovies(externalIds) {
 
   for (let i = 0; i < ids.length; i += MOVIE_BATCH_SIZE) {
     const batch = ids.slice(i, i + MOVIE_BATCH_SIZE);
-    // disc art and the title logo from fanart.tv ride along with the TMDB
-    // lookup; they are optional and never fail the batch. TMDB has its own
-    // title logos as a fallback.
     const movies = await Promise.allSettled(
       batch.map(async (id) => {
         const [movie, art] = await Promise.all([tmdb.getMovie(id), fanart.getMovieArt(id)]);
@@ -31,8 +28,6 @@ async function getMovies(externalIds) {
   return result;
 }
 
-// Deezer albums plus real CD art when it is already known; unknown ones are
-// looked up in the background (MusicBrainz is rate limited)
 async function getAlbums(externalIds) {
   const albums = await deezer.getAlbums(externalIds);
 

@@ -8,7 +8,6 @@ import Dialog from "@/components/Dialog";
 import Poster from "@/components/Poster";
 
 export default function MovieDetail({ movie: current, kind, recommenderHref, canRemove, onRemove, onClose }) {
-  // keep showing the last item while the dialog fades out
   const last = useRef(current);
   if (current) last.current = current;
   const movie = current || last.current;

@@ -90,8 +90,6 @@ a {
   }
 }
 
-/* header styles live further down, under "Header" */
-
 main {
   padding: 56px 0 96px;
 }
@@ -1103,8 +1101,6 @@ textarea {
   font-weight: 650;
 }
 
-
-
 .movies {
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 22px 16px;
@@ -1349,7 +1345,6 @@ button.movie:focus-visible .poster {
   background: var(--surface-2);
 }
 
-
 .picked-creator,
 .detail-creator {
   margin: 2px 0 0;
@@ -1372,12 +1367,6 @@ button.movie:focus-visible .poster {
   aspect-ratio: 2 / 3;
 }
 
-/* ------------------------------------------------------------------
-   Header: a regular sticky top bar. Logo and links on the left, account
-   on the right, hairline underneath. The --dock-* tokens below are still
-   used by the in-page switches (.segmented).
-   ------------------------------------------------------------------ */
-
 :root {
   --dock-bg: rgb(80 48 77 / 0.92);
   --dock-edge: rgb(255 255 255 / 0.12);
@@ -1386,7 +1375,6 @@ button.movie:focus-visible .poster {
   --dock-mark: #c8b8dc;
   --on-dock-mark: #2a1729;
   --dock-glow: rgb(42 24 40 / 0.5);
-  /* cards share the dock edge: a hairline ring plus a plum-tinted lift */
   --card-shadow: 0 0 0 1px var(--line), 0 1px 2px rgb(80 48 77 / 0.05), 0 18px 40px -22px rgb(80 48 77 / 0.35);
 }
 
@@ -1408,8 +1396,6 @@ button.movie:focus-visible .poster {
   border-bottom: 1px solid var(--line);
 }
 
-/* three columns with equal outer tracks keep the links on the page's true
-   centre, whatever the logo and account widths are */
 .header-inner {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -1446,8 +1432,6 @@ button.movie:focus-visible .poster {
   gap: 4px;
 }
 
-/* each link fills the bar's height so the active underline sits on the
-   header's bottom hairline */
 .nav-link {
   position: relative;
   display: inline-flex;
@@ -1514,8 +1498,6 @@ button.movie:focus-visible .poster {
   align-items: center;
 }
 
-/* ---- shared track: every in-page switch ---- */
-
 .track {
   position: relative;
 }
@@ -1524,7 +1506,6 @@ button.movie:focus-visible .poster {
   position: relative;
 }
 
-/* in-page switches are small docks: same plum glass, same lavender mark */
 .segmented {
   border-radius: var(--r-pill);
   background: var(--dock-bg);
@@ -1665,13 +1646,10 @@ button.movie:focus-visible .poster {
   background: var(--surface-2);
 }
 
-
 .user-sheet {
   top: calc(100% + 14px);
   right: 0;
 }
-
-/* ---- phone menu: hamburger toggle and the panel it opens ---- */
 
 .nav-toggle,
 .mobile-nav {
@@ -1708,7 +1686,6 @@ button.movie:focus-visible .poster {
   outline-offset: 2px;
 }
 
-/* pending friend requests stay visible while the links are folded away */
 .nav-toggle-count {
   position: absolute;
   top: 2px;
@@ -1785,7 +1762,6 @@ button.movie:focus-visible .poster {
   outline-offset: -2px;
 }
 
-/* below 768px the centred links fold into the hamburger */
 @media (max-width: 767px) {
   .header-inner {
     display: flex;
@@ -1831,14 +1807,6 @@ button.movie:focus-visible .poster {
   }
 }
 
-/* ------------------------------------------------------------------
-   Bookcase: a natural oak case (CC0 textures, see public/textures)
-   with a darker wood back panel. Items stand on oak planks inside
-   physical cases that open on hover to show what is inside. Each cell
-   shifts the plank grain by its column (--col, set by Bookcase.js) so
-   a row reads as one board.
-   ------------------------------------------------------------------ */
-
 :root {
   --board: 14px;
   --slot-inset: 14px;
@@ -1861,8 +1829,6 @@ button.movie:focus-visible .poster {
   display: none;
 }
 
-/* a floating wall shelf: no case around it, just planks held up by
-   metal brackets (drawn on the first and last slot of every row) */
 .bookcase {
   position: relative;
   padding: 0 0 56px;
@@ -1891,9 +1857,6 @@ button.movie:focus-visible .poster {
   gap: 0;
 }
 
-/* the plank: lit top surface and a shaded front edge */
-/* the plank: walnut-toned oak, lit top edge, shaded front, a soft shadow
-   on the wall below */
 .bookcase .shelf-ledge {
   display: block;
   position: relative;
@@ -1922,8 +1885,6 @@ button.movie:focus-visible .poster {
   border-bottom-right-radius: 3px;
 }
 
-/* black steel bracket: an L screwed to the wall (vertical arm with two
-   bolts, top arm under the plank) braced by a diagonal strut */
 [data-edge] > .shelf-ledge::before,
 [data-edge] > .shelf-ledge::after {
   position: absolute;
@@ -1958,16 +1919,11 @@ button.movie:focus-visible .poster {
   left: var(--bracket-in);
 }
 
-/* the right-hand bracket is the same part, mirrored */
 [data-edge="end"] > .shelf-ledge::before,
 [data-edge="both"] > .shelf-ledge::after {
   right: var(--bracket-in);
   transform: scaleX(-1);
 }
-
-/* ---- the kind switcher: typographic tabs above the shelf ----
-   Deliberately not the dock: plain words, the current one in full colour
-   with a lavender underline (the MarkTrack mark) that slides between them. */
 
 .bookcase-switch {
   margin-bottom: 4px;
@@ -2019,7 +1975,6 @@ button.movie:focus-visible .poster {
   border-radius: 4px;
 }
 
-/* the mark becomes an underline at the foot of the active word */
 .kind-switch .track-mark {
   top: 39px;
   height: 3px !important;
@@ -2027,8 +1982,6 @@ button.movie:focus-visible .poster {
   background: var(--accent);
   box-shadow: none;
 }
-
-/* ---- cases ---- */
 
 .case {
   position: relative;
@@ -2049,7 +2002,6 @@ button.movie:focus-visible .poster {
   box-shadow: none;
 }
 
-/* the front cover swings open on its left hinge */
 .cover {
   position: relative;
   z-index: 2;
@@ -2058,8 +2010,6 @@ button.movie:focus-visible .poster {
   transition: transform 0.7s var(--ease), filter 0.7s var(--ease);
 }
 
-/* open on hover only where there is a real pointer (touch screens keep
-   :hover stuck after a tap); keyboard focus opens it everywhere */
 .bookcase .movie:focus-visible .cover {
   transform: rotateY(-78deg);
   filter: brightness(0.92);
@@ -2092,7 +2042,6 @@ button.movie:focus-visible .poster {
   }
 }
 
-/* what is inside, sitting where the cover was */
 .case-inside {
   position: absolute;
   z-index: 1;
@@ -2110,7 +2059,6 @@ button.movie:focus-visible .poster {
   inset: 0 6px 3px 0;
 }
 
-/* black keep-case tray with the clips that hold the disc */
 .case-movie .case-inside,
 .case-game .case-inside,
 .case-album .case-inside {
@@ -2120,8 +2068,6 @@ button.movie:focus-visible .poster {
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.05), inset 0 0 12px rgb(0 0 0 / 0.7);
 }
 
-/* the disc: printed with the cover art, rainbow data side showing at
-   the rim, clear hub with the centre hole */
 .disc {
   position: relative;
   width: 86%;
@@ -2141,16 +2087,12 @@ button.movie:focus-visible .poster {
       transparent 26.3%
     ),
     var(--art, linear-gradient(140deg, #8f7a9c, #50304d 60%, #2a1828)) center / cover;
-  /* a real disc from the middle out: the open 15 mm hole, the clear
-     clamping area with its stacking ring (the tray shows through, so it
-     is only faintly visible), the silver mirror band, then the print */
   -webkit-mask: radial-gradient(circle, transparent 0 9%, rgb(0 0 0 / 0.28) 9.1% 19%, #000 19.1%);
   mask: radial-gradient(circle, transparent 0 9%, rgb(0 0 0 / 0.28) 9.1% 19%, #000 19.1%);
   box-shadow: 0 2px 8px rgb(0 0 0 / 0.6);
   transition: transform 1.2s var(--ease);
 }
 
-/* a real disc image already has its own hole, rim and print */
 .disc.disc-art {
   display: block;
   height: auto;
@@ -2178,8 +2120,6 @@ button.movie:focus-visible .poster {
   transform: rotate(50deg);
 }
 
-/* a Nintendo Switch game card: small, dark plastic, the cover art on the
-   label, with the notch and contacts at the top */
 .cartridge {
   position: relative;
   width: 36%;
@@ -2209,7 +2149,6 @@ button.movie:focus-visible .poster {
   opacity: 0.85;
 }
 
-/* the first page of a book */
 .book-page {
   width: 100%;
   height: 100%;
@@ -2219,12 +2158,6 @@ button.movie:focus-visible .poster {
     #f3ecdf;
 }
 
-/* ---- case sizing: one shelf height for every kind ----
-   Bookcase.js puts the column width in --col-w. Every case is as tall as a
-   movie case at that width (--H is the height of the art, --rim the plastic
-   around it), so switching movies / games / books / albums never changes
-   the height of the shelf. Widths follow each cover's real proportions, so
-   nothing is ever cropped. */
 .bookcase-grid {
   --rim: 5px;
   --W: calc(var(--col-w, 160px) - var(--slot-inset) * 2);
@@ -2235,10 +2168,6 @@ button.movie:focus-visible .poster {
   min-height: calc(var(--H) + var(--rim) * 2 + var(--ledge-h));
 }
 
-/* ---- keep case (movies and games), seen flat from the front ----
-   A glossy plastic rim around the printed sleeve. Plastic colour comes
-   from the plastic-* class (see lib/platforms.js). The cover and what is
-   behind it share one grid cell so the inside matches the cover's size. */
 .case-movie,
 .case-game {
   --plastic: #141418;
@@ -2266,7 +2195,6 @@ button.movie:focus-visible .poster {
   grid-area: 1 / 1;
 }
 
-/* what is inside sits exactly where the cover is and never sizes the case */
 .case-movie > .case-inside,
 .case-game > .case-inside,
 .case-album > .case-inside {
@@ -2282,7 +2210,6 @@ button.movie:focus-visible .poster {
   border-radius: 2px;
 }
 
-/* movies: the whole 2:3 poster */
 .bookcase .case-movie > .cover {
   width: calc(var(--H) * 2 / 3);
 }
@@ -2293,9 +2220,6 @@ button.movie:focus-visible .poster {
   aspect-ratio: 2 / 3;
 }
 
-/* games: the whole 264 x 374 IGDB cover. With a top band (PlayStation,
-   Xbox One) the cover is a little narrower so band + art keep the same
-   height as every other case; nothing is cut off. */
 .bookcase .case-game > .cover {
   width: calc(var(--H) * 264 / 374);
 }
@@ -2310,7 +2234,6 @@ button.movie:focus-visible .poster {
   aspect-ratio: 264 / 374;
 }
 
-/* plastic colours */
 .plastic-ps {
   --plastic: #2262c6;
   --plastic-hi: rgb(255 255 255 / 0.3);
@@ -2332,7 +2255,6 @@ button.movie:focus-visible .poster {
   --tray-b: #134b22;
 }
 
-/* full-width band across the top (PlayStation, Xbox One / 360) */
 .cover-platform {
   flex: 0 0 auto;
   display: flex;
@@ -2375,7 +2297,6 @@ button.movie:focus-visible .poster {
   filter: invert(1);
 }
 
-/* Xbox One / 360: green band, logo centred in white */
 .band-xbox {
   justify-content: center;
   background: linear-gradient(#1f9e1f, #107c10);
@@ -2386,7 +2307,6 @@ button.movie:focus-visible .poster {
   filter: brightness(0) invert(1);
 }
 
-/* logo on the art in the top-left corner */
 .cover-corner {
   position: absolute;
   z-index: 1;
@@ -2396,14 +2316,12 @@ button.movie:focus-visible .poster {
   pointer-events: none;
 }
 
-/* Nintendo Switch: the red tab with the logo, flush in the corner */
 .corner-switch {
   width: 23%;
   height: auto;
   box-shadow: 1px 1px 3px rgb(0 0 0 / 0.25);
 }
 
-/* Xbox Series X|S: just the white Xbox logo over the art */
 .corner-xbox-series {
   top: 4%;
   left: 5%;
@@ -2412,9 +2330,7 @@ button.movie:focus-visible .poster {
   filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgb(0 0 0 / 0.6));
 }
 
-/* albums: a flat clear case around the square cover, same width as before */
 .case-album {
-  /* a little wider than the slot so albums read closer to the other cases */
   --album: calc(var(--W) + 14px - var(--rim) * 2);
   display: grid;
   padding: var(--rim);
@@ -2427,7 +2343,6 @@ button.movie:focus-visible .poster {
     0 -2px 10px -4px rgb(0 0 0 / 0.3);
 }
 
-/* no sleeve glare on CDs */
 .case-album .cover::after {
   display: none;
 }
@@ -2438,8 +2353,6 @@ button.movie:focus-visible .poster {
   aspect-ratio: 1;
 }
 
-/* books: the whole cover at shelf height, its own width */
-/* the book case adds 3px of page block below the cover */
 .bookcase .case-book .cover .poster {
   width: auto;
   max-width: none;
@@ -2447,7 +2360,6 @@ button.movie:focus-visible .poster {
   aspect-ratio: auto;
 }
 
-/* the clear sleeve over the cover catches light and moves with it */
 .case-movie .cover::after,
 .case-game .cover::after,
 .case-album .cover::after {
@@ -2477,7 +2389,6 @@ button.movie:focus-visible .poster {
   );
 }
 
-/* book: spine crease on the left, page block on the right and bottom */
 .case-book {
   padding: 0 6px 3px 0;
 }
@@ -2515,7 +2426,6 @@ button.movie:focus-visible .poster {
   border-radius: 1px 3px 3px 1px;
 }
 
-/* spare spaces and loading slots take a case's size without drawing one */
 .case-empty {
   padding: var(--rim);
   background: none;
@@ -2540,7 +2450,6 @@ button.movie:focus-visible .poster {
   aspect-ratio: 1;
 }
 
-/* the add slot: an empty clear case on the shelf, the lavender plus inside */
 .case-add {
   padding: var(--rim);
   border-radius: 6px;
@@ -2630,7 +2539,6 @@ button.movie:focus-visible .poster {
   background-size: 200% 100%;
 }
 
-/* empty shelf: the message sits on the back panel above the first plank */
 .bookcase-empty {
   position: absolute;
   inset: 0 0 var(--ledge-h);
@@ -2651,8 +2559,6 @@ button.movie:focus-visible .poster {
   color: var(--text);
   font-size: 16px;
 }
-
-/* ---- recommended picks: lavender frame + band with the friend ---- */
 
 .movie-recommended .poster {
   outline: 3px solid var(--dock-mark);
@@ -2726,7 +2632,6 @@ button.movie:focus-visible .poster {
   }
 }
 
-/* ---- kind tabs + visibility on one line above the shelf ---- */
 .shelf-bar {
   display: flex;
   align-items: center;
@@ -2738,7 +2643,6 @@ button.movie:focus-visible .poster {
   min-width: 0;
 }
 
-/* globe (public) or lock (private); a toggle on your own shelf */
 .shelf-visibility {
   flex-shrink: 0;
   margin-left: auto;
@@ -2769,7 +2673,6 @@ button.movie:focus-visible .poster {
   cursor: default;
 }
 
-/* ---- locked shelf: blurred and darkened, the prompt on top ---- */
 .shelf-locked {
   position: relative;
 }
@@ -2811,12 +2714,6 @@ button.movie:focus-visible .poster {
     font-size: 17px;
   }
 }
-
-/* ------------------------------------------------------------------
-   Loading: placeholders shaped like the content they stand in for.
-   Bones share one shimmer, offset by --i so a grid ripples instead of
-   blinking in unison. Reduced motion leaves them still (rule above).
-   ------------------------------------------------------------------ */
 
 .skeleton {
   animation-delay: calc(var(--i, 0) * -0.14s);
@@ -2919,8 +2816,6 @@ button.movie:focus-visible .poster {
   display: none;
 }
 
-/* ---- small shared bits ---- */
-
 .tag-quiet {
   background: var(--surface-2);
   color: var(--muted);
@@ -2952,8 +2847,6 @@ button.movie:focus-visible .poster {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-/* ---- person card: the name link stretches over the whole card ---- */
 
 .person-card {
   position: relative;
@@ -3019,7 +2912,6 @@ button.movie:focus-visible .poster {
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
 }
 
-/* a single swipeable row of shelves */
 .people-scroll {
   grid-template-columns: none;
   grid-auto-flow: column;
@@ -3034,8 +2926,6 @@ button.movie:focus-visible .poster {
 .people-scroll > * {
   scroll-snap-align: start;
 }
-
-/* ---- explore ---- */
 
 .explore-sub {
   margin-bottom: 0;
@@ -3125,8 +3015,6 @@ button.movie:focus-visible .poster {
   letter-spacing: -0.015em;
 }
 
-/* ---- friends ---- */
-
 .requests {
   margin-bottom: 32px;
 }
@@ -3192,8 +3080,6 @@ button.movie:focus-visible .poster {
   font-size: 15px;
 }
 
-/* ---- landing (signed out) ---- */
-
 .landing-hero {
   display: grid;
   justify-items: center;
@@ -3243,8 +3129,6 @@ button.movie:focus-visible .poster {
   box-shadow: 0 0 0 2px var(--bg);
 }
 
-/* a shelf that runs from one edge of the screen to the other; its title
-   stays lined up with the page content */
 :root {
   --gutter: 16px;
 }
@@ -3262,8 +3146,6 @@ button.movie:focus-visible .poster {
   margin-bottom: 24px;
 }
 
-
-/* no wall brackets at the screen edges: the plank runs off the screen */
 .bookcase-bleed .bookcase-grid > * > .shelf-ledge::before,
 .bookcase-bleed .bookcase-grid > * > .shelf-ledge::after {
   content: none;
@@ -3273,9 +3155,6 @@ button.movie:focus-visible .poster {
   border-radius: 0;
 }
 
-/* every case on this shelf stands open, so you see the disc, cartridge or
-   record inside. They swing open one by one on load, left to right; hovering a
-   case closes it again to show its cover. */
 .bookcase-open .movie .cover {
   transform: rotateY(-78deg);
   filter: brightness(0.92);
@@ -3327,11 +3206,6 @@ button.movie:focus-visible .poster {
   }
 }
 
-/* ---- forced case states (touch screens and the open detail dialog) ----
-   is-open: the case stands open like on hover (a tap on the shelf page
-   swings it open before the details appear, and it stays open behind
-   them). is-closed: a landing case tapped shut to show its cover. */
-
 .bookcase .movie.is-open {
   z-index: 2;
 }
@@ -3358,8 +3232,6 @@ button.movie:focus-visible .poster {
 .bookcase-open .movie.is-closed .disc {
   transform: none;
 }
-
-/* ---- dialog: fade the page behind it, and fade out on close ---- */
 
 .detail[open]::backdrop {
   animation: backdrop-in 0.35s var(--ease) both;
@@ -3392,8 +3264,6 @@ button.movie:focus-visible .poster {
   }
 }
 
-/* ---- landing: browse every public shelf (what used to be Explore) ---- */
-
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
@@ -3405,7 +3275,6 @@ button.movie:focus-visible .poster {
   scroll-margin-top: 96px;
 }
 
-/* right-aligned, a size up from the other section titles */
 .landing-browse h2 {
   margin: 0 0 32px auto;
   max-width: 20ch;
@@ -3431,11 +3300,6 @@ button.movie:focus-visible .poster {
     margin-top: 112px;
   }
 }
-
-/* ---- landing: the pitch beside one real recommendation ----
-   Text on the left, a three-case shelf on the right, vertically centred
-   on each other. Phones stack them and centre the text. Once in view the
-   recommended case drops into its gap on the shelf. */
 
 .story {
   display: grid;
@@ -3463,7 +3327,6 @@ button.movie:focus-visible .poster {
   min-width: 0;
 }
 
-/* exactly three slots: their pick, the recommendation, their pick */
 .story-shelf .bookcase-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -3484,8 +3347,6 @@ button.movie:focus-visible .poster {
     opacity: 0;
   }
 
-  /* only the case falls; its stretch of plank stays in place. backwards
-     fill so the hover lift still works once it has landed */
   .story.is-seen .story-landing .case {
     animation: story-case-drop 0.9s cubic-bezier(0.34, 1.4, 0.64, 1) 0.3s backwards;
   }
@@ -3518,8 +3379,6 @@ button.movie:focus-visible .poster {
     margin-top: 72px;
   }
 }
-
-/* ---- landing: shelves to browse, two rows of four ---- */
 
 .people-four {
   grid-template-columns: repeat(4, minmax(0, 1fr));

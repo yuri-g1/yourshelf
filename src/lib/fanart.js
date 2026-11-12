@@ -1,6 +1,3 @@
-// fanart.tv: real disc artwork and title logos (transparent PNGs) for
-// movies, looked up by TMDB id. Used only to decorate cases on the shelf,
-// so every failure resolves to empty art instead of throwing.
 const BASE_URL = "https://webservice.fanart.tv/v3";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_CACHE_ENTRIES = 2000;
@@ -29,8 +26,6 @@ function compare(a, b) {
   return 0;
 }
 
-// fanart.tv serves a ~200px preview next to every full-size image; the
-// shelf never shows a disc bigger than that.
 function previewUrl(url) {
   return url.replace("/fanart/", "/preview/");
 }
@@ -60,7 +55,6 @@ async function getMovieArt(tmdbId) {
 
     const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
 
-    // 404 means fanart.tv has nothing for this movie: cache that too
     if (response.status === 404) {
       remember(tmdbId, NO_ART);
       return NO_ART;
@@ -86,7 +80,6 @@ async function getMovieArt(tmdbId) {
 
 const albumCache = new Map();
 
-// CD artwork for an album, by MusicBrainz release-group id (disc 1)
 async function getAlbumDisc(releaseGroupId) {
   if (!isConfigured() || !releaseGroupId) return null;
 

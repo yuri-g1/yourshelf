@@ -12,16 +12,10 @@ import { ShelfSlots, SlowNote } from "@/components/Skeletons";
 import { api } from "@/lib/api";
 import { caseFor } from "@/lib/platforms";
 
-// One shelf that runs the full width of the screen, every case standing
-// open, with movies, games and albums taken in turn. Each kind starts with
-// the public shelf that has the most of it and tops up from the next ones.
 const KINDS = ["movie", "game", "album"];
 const PER_SHELF = 10;
-// enough for one row on a very wide screen; Bookcase trims to what fits
 const MIXED = 20;
 
-// own picks with a couple of friends' recommendations mixed in, so the
-// lavender "Recommended" band shows up on the wall
 function mix(media, owner) {
   const recommended = media.recommended.slice(0, 2);
   const items = [...media.myShelf];
@@ -44,9 +38,6 @@ function shelfFor(kind, shelves) {
   return { kind, items };
 }
 
-// A game without a known platform sits in a plain black case that looks
-// just like a movie, so games in console cases go first, alternating
-// PlayStation, Switch and Xbox, and the plain ones come last.
 function byConsole(games) {
   const families = new Map();
 
@@ -68,7 +59,6 @@ function byConsole(games) {
   return [...ordered, ...plain];
 }
 
-// movie, game, album, movie, game... taken in turn from each kind
 function mixedShelf(byKind) {
   const items = [];
 
@@ -85,12 +75,8 @@ export default function Landing() {
   const [wall, setWall] = useState(null);
   const [note, setNote] = useState(null);
   const [failed, setFailed] = useState(false);
-  // touch screens have no hover: the first tap closes a case to show its
-  // cover, a second tap on that cover opens the owner's shelf
   const [closed, setClosed] = useState(null);
 
-  // 100vw counts the scrollbar; the full-width shelf subtracts it so it
-  // reaches both edges exactly
   useEffect(() => {
     const root = document.documentElement;
     const measure = () => root.style.setProperty("--scrollbar", `${window.innerWidth - root.clientWidth}px`);
@@ -127,7 +113,6 @@ export default function Landing() {
           )
           .find((pick) => pick.recommendationText && pick.recommendedBy);
         if (!found) return setNote(false);
-        // the two picks that stood next to it on the owner's shelf
         const home = shelves.find((shelf) => shelf.owner._id === found.owner._id);
         setNote({ ...found, neighbors: home[found.kind].myShelf.slice(0, 2) });
       })

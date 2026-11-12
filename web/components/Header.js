@@ -91,12 +91,8 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const headerRef = useRef(null);
 
-  // the phone menu closes when you land on another page, press Esc or tap
-  // anywhere outside the header
   useEffect(() => setMenuOpen(false), [pathname, user]);
 
-  // Next scrolls the new page's content into view, which leaves it just under
-  // the sticky header; start every page at the very top instead
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
@@ -179,7 +175,6 @@ export default function Header() {
       <header className={`header ${menuOpen ? "is-menu-open" : ""}`} ref={headerRef}>
         <div className="container header-inner">
           <Link href="/" aria-label="yourshelf home" className="brand-logo">
-            {/* logo.svg is painted through a mask so it takes the accent color */}
             <span className="logo-mark" aria-hidden="true" />
           </Link>
 
@@ -226,7 +221,6 @@ export default function Header() {
           )}
         </div>
 
-        {/* phones only: the links fold into this panel under the bar */}
         {showLinks && menuOpen && (
           <nav id="mobile-nav" className="mobile-nav" aria-label="Main">
             <div className="container mobile-nav-list">{renderLinks("mobile-nav-link")}</div>

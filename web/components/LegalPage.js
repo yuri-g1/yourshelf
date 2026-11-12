@@ -13,8 +13,6 @@ export default function LegalPage({ title, intro, children }) {
   );
 }
 
-// How to reach the person running yourshelf, used wherever a page says
-// "contact us".
 export function Contact() {
   if (CONTACT_EMAIL) {
     return <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>;

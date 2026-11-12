@@ -17,7 +17,6 @@ import { useApi } from "@/lib/api";
 import { KIND_LIST, kindOf } from "@/lib/kinds";
 
 const PREVIEW_SLOTS = 12;
-// how long the cover swings before the details appear on touch screens
 const OPEN_MS = 520;
 
 export default function ShelfView({ userId }) {
@@ -34,7 +33,6 @@ export default function ShelfView({ userId }) {
   const [adding, setAdding] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [busy, setBusy] = useState(false);
-  // the case that is swinging open (or stays open behind the dialog)
   const [opening, setOpening] = useState(null);
   const openTimer = useRef(null);
 
@@ -79,8 +77,6 @@ export default function ShelfView({ userId }) {
     }
   }, [api, ownerId, me]);
 
-  // moving from one shelf to another must not show the previous owner's
-  // shelf while the next one loads
   useEffect(() => {
     setShelf(null);
     setLocked(null);
@@ -96,9 +92,6 @@ export default function ShelfView({ userId }) {
 
   useEffect(() => () => clearTimeout(openTimer.current), []);
 
-  // On touch screens there is no hover to open a case, so a tap first swings
-  // the cover open and the details follow once the disc is showing. With a
-  // mouse the case is already open from hovering, so the dialog comes at once.
   function openItem(movie) {
     if (opening) return;
     clearTimeout(openTimer.current);
@@ -206,7 +199,6 @@ export default function ShelfView({ userId }) {
   const isPrivate = visibility === "private";
   const VisibilityIcon = isPrivate ? LockSimple : GlobeHemisphereWest;
 
-  // globe or lock, aligned with the kind tabs; on your own shelf it toggles
   const visibilityControl = isOwner ? (
     <button
       type="button"
@@ -278,7 +270,6 @@ export default function ShelfView({ userId }) {
 
   const config = kindOf(kind);
   const media = shelf[kind];
-  // one shelf per kind: your own picks first, then what friends recommended
   const items = [...media.myShelf, ...media.recommended];
 
   const emptyCopy = isOwner

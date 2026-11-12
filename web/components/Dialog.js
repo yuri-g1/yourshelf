@@ -4,11 +4,8 @@ import { useEffect, useRef, useState } from "react";
 
 const CLOSE_MS = 220;
 
-// A native <dialog> that fades in and also fades out: when `open` turns
-// false it plays the closing animation first and only then closes.
 export default function Dialog({ open, onClose, labelledBy, className = "", children }) {
   const ref = useRef(null);
-  // children stay mounted through the fade-out, then unmount so forms reset
   const [mounted, setMounted] = useState(open);
 
   useEffect(() => {
@@ -50,7 +47,6 @@ export default function Dialog({ open, onClose, labelledBy, className = "", chil
       ref={ref}
       className={`detail ${className}`}
       aria-labelledby={labelledBy}
-      // Esc: let the parent close it so the fade-out runs
       onCancel={(event) => {
         event.preventDefault();
         onClose();

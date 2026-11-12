@@ -381,8 +381,6 @@ async function findMovie([title, year]) {
   };
 }
 
-// creates the demo people that do not exist yet, with their movies, and the
-// friendships and movie recommendations that involve at least one of them
 async function createPeople(existing = {}) {
   const users = { ...existing };
   const missing = PEOPLE.filter((person) => !existing[person.name]);

@@ -11,9 +11,6 @@ import { useApi } from "@/lib/api";
 
 const SUGGESTIONS = 5;
 
-// Friends exist so people can recommend things to each other. The page
-// leads with what needs an answer, then the people whose shelves you can
-// fill, and keeps finding new people in a side column.
 export default function FriendsPage() {
   const api = useApi();
   const { user: me, loading } = useAuth();

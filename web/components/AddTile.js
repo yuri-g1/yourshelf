@@ -1,5 +1,3 @@
-// The add slot: an empty, clear case standing on the shelf with the app's
-// lavender plus in it. Same size as the cases around it.
 export default function AddTile({ label, source, kind = "movie", onClick }) {
   return (
     <button

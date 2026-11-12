@@ -3,10 +3,6 @@
 import Bookcase from "@/components/Bookcase";
 import { useSlow } from "@/lib/api";
 
-// Placeholders shaped like the screen they stand in for, so nothing jumps
-// when the real content arrives. The free API plan sleeps when idle; after a
-// few seconds the note explains the wait instead of leaving a silent shimmer.
-
 export function SlowNote({ active = true }) {
   const slow = useSlow(active);
 

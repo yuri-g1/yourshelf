@@ -6,10 +6,6 @@ import MovieCard from "@/components/MovieCard";
 import { ShelfSlots } from "@/components/Skeletons";
 import { kindOf } from "@/lib/kinds";
 
-// The pitch next to one real example: a friend's recommendation standing on
-// someone's shelf between their own picks. When the section scrolls into
-// view the recommended case drops into its gap, which is the whole idea of
-// the app in one motion.
 export default function RecommendationStory({ note, onOpen }) {
   const ref = useRef(null);
   const [seen, setSeen] = useState(false);

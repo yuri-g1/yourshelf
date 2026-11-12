@@ -1,11 +1,6 @@
-// Real CD artwork for albums: Deezer barcode -> MusicBrainz release group ->
-// fanart.tv cdart. MusicBrainz allows one request per second, so lookups never
-// block a response: `cachedDisc` answers from memory, and `warm` queues the
-// lookup in the background so the art is there on the next load.
 const fanart = require("./fanart");
 
 const MB_URL = "https://musicbrainz.org/ws/2/release/";
-// MusicBrainz asks clients to identify themselves; keep it generic
 const USER_AGENT = "yourshelf/1.0 (personal project)";
 const MB_SPACING_MS = 1100;
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
@@ -63,7 +58,6 @@ function warm(barcode) {
   if (pending.has(barcode)) return;
 
   pending.add(barcode);
-  // one MusicBrainz request at a time, spaced to respect its rate limit
   queue = queue
     .then(() => lookup(barcode))
     .then(() => new Promise((resolve) => setTimeout(resolve, MB_SPACING_MS)));

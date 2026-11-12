@@ -69,7 +69,6 @@ function toAlbum(raw) {
     posterPath: raw.md5_image || null,
     year: raw.release_date ? raw.release_date.slice(0, 4) : null,
     creator: raw.artist?.name?.slice(0, 100) || null,
-    // used server-side to find the real CD art (see albumart.js)
     barcode: raw.upc || null,
   };
 }

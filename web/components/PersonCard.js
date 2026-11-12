@@ -20,9 +20,6 @@ export function totalOf(preview) {
   return Object.values(preview?.counts || {}).reduce((sum, count) => sum + count, 0);
 }
 
-// A person and the latest covers on their shelf. The name link stretches
-// over the whole card; `action` and `footer` sit above it so their buttons
-// stay clickable.
 export default function PersonCard({ user, preview = user.preview, action, footer, className = "" }) {
   const slots = Array.from({ length: STRIP }, (_, index) => preview?.posters[index]);
 

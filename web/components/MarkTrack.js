@@ -2,13 +2,9 @@
 
 import { useLayoutEffect, useRef, useState } from "react";
 
-// A pill track whose `.active` child gets a lavender block behind it that
-// slides between options. Shared by the dock and every in-page switch so
-// selection looks and moves the same everywhere.
 export default function MarkTrack({ as: Tag = "div", className = "", watch, children, ...rest }) {
   const ref = useRef(null);
   const [mark, setMark] = useState(null);
-  // the first placement snaps into position; only later changes slide
   const placed = useRef(false);
 
   useLayoutEffect(() => {

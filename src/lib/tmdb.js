@@ -39,8 +39,6 @@ async function request(path, params = {}) {
   return response.json();
 }
 
-// TMDB title logo (transparent PNG of the title in its real typeface),
-// only present when the movie was fetched with its images appended
 function titleLogo(raw) {
   const logos = raw.images?.logos || [];
   const best = [...logos].sort(

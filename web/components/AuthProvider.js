@@ -23,8 +23,6 @@ function writeHint(signedIn) {
 export default function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  // whether this browser was signed in last time; only used to pick which
-  // placeholder to show while /me is still on its way
   const [hint, setHint] = useState(null);
 
   const refresh = useCallback(async () => {
@@ -57,7 +55,6 @@ export default function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
-  // the server already ended the session (account deleted): just forget it
   const clearUser = useCallback(() => {
     writeHint(false);
     setUser(null);

@@ -9,8 +9,6 @@ export default function HomePage() {
   const { user, loading, hint } = useAuth();
 
   if (loading) {
-    // returning visitors who were signed in get their shelf's outline;
-    // everyone else sees the landing right away
     if (hint === "1") return <ShelfSkeleton />;
     if (hint === null) return null;
   }

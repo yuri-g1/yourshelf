@@ -83,10 +83,6 @@ router.patch("/me/shelf", identifyUser, writeLimit, async (req, res) => {
   return res.json({ visibility });
 });
 
-// Deletes the account and everything tied to it: the user (and so their
-// shelf), their friendships on both sides, every recommendation they left on
-// other people's shelves, and all their sessions. Asks for the password again
-// so a session left open on someone else's device can't wipe the account.
 router.delete("/me", identifyUser, deleteAccountLimit, async (req, res) => {
   const password = String(req.body?.password ?? "");
   const user = await User.findById(req.user._id).select("+passwordHash");

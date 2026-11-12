@@ -6,19 +6,12 @@ import { ArrowRight } from "@phosphor-icons/react";
 import PersonCard from "@/components/PersonCard";
 import { PeopleSkeleton } from "@/components/Skeletons";
 
-// two rows of four on desktop
 const SHOWN = 8;
 
-// The fullest public shelves (people arrives already sorted), then the
-// invitation to make your own.
-// `settled` turns true once everything above this section has loaded, so a
-// jump to #shelves lands in the right place instead of shifting afterwards
 export default function ShelfBrowser({ people, failed, settled }) {
   const ref = useRef(null);
   const jumped = useRef(false);
 
-  // the page is drawn after load, so the browser misses a #shelves link
-  // (old /explore links land here); jump to the section ourselves
   useEffect(() => {
     if (!settled || jumped.current || window.location.hash !== "#shelves") return;
     jumped.current = true;

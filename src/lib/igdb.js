@@ -4,8 +4,6 @@ const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_CACHE_ENTRIES = 2000;
 const TOKEN_MARGIN_MS = 60 * 1000;
 const FIELDS = "name,summary,cover.image_id,first_release_date,platforms.abbreviation";
-// When a game is on several platforms, the shelf shows it in the case of the
-// first one found in this order (current consoles first).
 const PLATFORM_ORDER = ["PS5", "PS4", "Switch 2", "Switch", "Series X|S", "XONE", "PS3", "X360", "WiiU", "Wii", "PS2", "NGC", "PC"];
 const SEARCH_FIELDS = `${FIELDS},total_rating_count`;
 const RELEASE_TYPES = "(0,2,4,8,9,10)";

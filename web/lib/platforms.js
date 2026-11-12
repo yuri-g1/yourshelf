@@ -1,11 +1,3 @@
-// Maps the IGDB platform abbreviation the API returns for a game to the case
-// it ships in, following how each console labels its real covers:
-// - "band": a full-width band across the top with the logo (PlayStation,
-//   Xbox One and 360)
-// - "corner": the logo sits on the art in the top-left corner (the red
-//   Nintendo Switch tab, the Xbox Series X|S redesign)
-// Logos live in /public/logos (see CREDITS.md there). Platforms without a
-// logo get a plain case with no label.
 const PLATFORMS = {
   PS5: { family: "ps", label: "band", mark: "ps5", logo: "/logos/playstation5.svg" },
   PS4: { family: "ps", label: "band", mark: "ps4", logo: "/logos/playstation4.svg" },
