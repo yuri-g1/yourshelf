@@ -2,41 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useLayoutEffect, useRef, useState } from "react";
+import MarkTrack from "@/components/MarkTrack";
 
-// Links for the floating dock. A lavender block sits behind the current
-// page and slides to the new one when the route changes.
+// Links for the floating dock. The lavender mark slides to the current page.
 export default function DockNav({ links, className = "", label = "Main" }) {
   const pathname = usePathname();
-  const listRef = useRef(null);
-  const [mark, setMark] = useState(null);
-
-  useLayoutEffect(() => {
-    const list = listRef.current;
-    if (!list) return;
-
-    function measure() {
-      const active = list.querySelector('[aria-current="page"]');
-      setMark(active ? { x: active.offsetLeft, w: active.offsetWidth } : null);
-    }
-
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(list);
-    return () => observer.disconnect();
-  }, [pathname, links.length]);
 
   return (
-    <nav className={`dock-nav ${className}`} aria-label={label} ref={listRef}>
-      <span
-        className="dock-mark"
-        aria-hidden="true"
-        style={
-          mark
-            ? { width: mark.w, transform: `translateX(${mark.x}px)`, opacity: 1 }
-            : { opacity: 0 }
-        }
-      />
+    <MarkTrack
+      as="nav"
+      className={`dock-nav ${className}`}
+      aria-label={label}
+      watch={`${pathname}|${links.length}`}
+    >
       {links.map((link) => {
         const active = pathname === link.href;
 
@@ -56,6 +34,6 @@ export default function DockNav({ links, className = "", label = "Main" }) {
           </Link>
         );
       })}
-    </nav>
+    </MarkTrack>
   );
 }

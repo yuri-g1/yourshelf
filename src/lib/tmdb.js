@@ -39,6 +39,16 @@ async function request(path, params = {}) {
   return response.json();
 }
 
+// TMDB title logo (transparent PNG of the title in its real typeface),
+// only present when the movie was fetched with its images appended
+function titleLogo(raw) {
+  const logos = raw.images?.logos || [];
+  const best = [...logos].sort(
+    (a, b) => (a.iso_639_1 === "en" ? 0 : 1) - (b.iso_639_1 === "en" ? 0 : 1) || b.vote_average - a.vote_average,
+  )[0];
+  return best?.file_path ? `https://image.tmdb.org/t/p/w300${best.file_path}` : null;
+}
+
 function toMovie(raw) {
   return {
     externalId: String(raw.id),
@@ -46,6 +56,7 @@ function toMovie(raw) {
     desc: String(raw.overview || "").slice(0, 500),
     posterPath: raw.poster_path || null,
     year: raw.release_date ? raw.release_date.slice(0, 4) : null,
+    titleLogo: titleLogo(raw),
   };
 }
 
@@ -64,7 +75,12 @@ async function getMovie(externalId) {
 
   if (cached && Date.now() < cached.expiresAt) return cached.movie;
 
-  const movie = toMovie(await request(`/movie/${externalId}`));
+  const movie = toMovie(
+    await request(`/movie/${externalId}`, {
+      append_to_response: "images",
+      include_image_language: "en,null",
+    }),
+  );
 
   if (movieCache.size >= MAX_CACHE_ENTRIES) {
     movieCache.delete(movieCache.keys().next().value);

@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { GlobeHemisphereWest, LockSimple } from "@phosphor-icons/react";
 import { useCallback, useEffect, useState } from "react";
 import AddTile from "@/components/AddTile";
+import Bookcase from "@/components/Bookcase";
 import Avatar from "@/components/Avatar";
 import Dialog from "@/components/Dialog";
 import Loading from "@/components/Loading";
+import MarkTrack from "@/components/MarkTrack";
 import MovieCard from "@/components/MovieCard";
 import MovieDetail from "@/components/MovieDetail";
 import MovieForm from "@/components/MovieForm";
@@ -25,7 +28,6 @@ export default function ShelfView({ userId }) {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [kind, setKind] = useState("movie");
-  const [tab, setTab] = useState("all");
   const [selected, setSelected] = useState(null);
   const [adding, setAdding] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -111,65 +113,64 @@ export default function ShelfView({ userId }) {
     />
   );
 
+  const counts = shelf && (
+    <p className="profile-meta">
+      {KIND_LIST.map((item, index) => {
+        const total = shelf[item.key].myShelf.length + shelf[item.key].recommended.length;
+
+        return (
+          <span key={item.key}>
+            {index > 0 && <span aria-hidden="true"> · </span>}
+            <strong>{total}</strong> {total === 1 ? item.noun : item.plural}
+          </span>
+        );
+      })}
+    </p>
+  );
+
   const header = (
     <div className="profile reveal">
       <div className="profile-id">
         <Avatar name={owner.name} size="lg" />
         <div>
           <h1>{isOwner ? "Your shelf" : `${owner.name}'s shelf`}</h1>
-          <p className="profile-meta">
-            {visibility === "private"
-              ? isOwner
-                ? "Private. Only you and your friends can see it."
-                : "Private shelf"
-              : isOwner
-                ? "Public. Anyone can see it."
-                : "Public shelf"}
-          </p>
-          {shelf && (
-            <p className="profile-stats">
-              {KIND_LIST.map((item, index) => {
-                const total = shelf[item.key].myShelf.length + shelf[item.key].recommended.length;
-
-                return (
-                  <span key={item.key}>
-                    {index > 0 && <span aria-hidden="true"> · </span>}
-                    <strong>{total}</strong> {total === 1 ? item.noun : item.plural}
-                  </span>
-                );
-              })}
-            </p>
-          )}
+          {counts || <p className="profile-meta">Only {owner.name}'s friends can see this shelf.</p>}
         </div>
       </div>
-
-      {isOwner && (
-        <div className="segmented" role="group" aria-label="Shelf visibility">
-          {["public", "private"].map((option) => (
-            <button
-              key={option}
-              className={visibility === option ? "active" : ""}
-              aria-pressed={visibility === option}
-              onClick={() =>
-                visibility !== option &&
-                run(
-                  () =>
-                    api("/me/shelf", {
-                      method: "PATCH",
-                      body: { visibility: option },
-                    }),
-                  option === "private"
-                    ? "Your shelf is now private. Only friends can see it."
-                    : "Your shelf is now public.",
-                )
-              }
-            >
-              {option === "public" ? "Public" : "Private"}
-            </button>
-          ))}
-        </div>
-      )}
     </div>
+  );
+
+  const isPrivate = visibility === "private";
+  const VisibilityIcon = isPrivate ? LockSimple : GlobeHemisphereWest;
+
+  // globe or lock, aligned with the kind tabs; on your own shelf it toggles
+  const visibilityControl = isOwner ? (
+    <button
+      type="button"
+      className="shelf-visibility"
+      title={isPrivate ? "Private: only you and your friends. Click to make it public." : "Public: anyone can see it. Click to make it private."}
+      aria-label={isPrivate ? "Shelf is private. Make it public" : "Shelf is public. Make it private"}
+      onClick={() => {
+        const next = isPrivate ? "public" : "private";
+        run(
+          () => api("/me/shelf", { method: "PATCH", body: { visibility: next } }),
+          next === "private"
+            ? "Your shelf is now private. Only friends can see it."
+            : "Your shelf is now public.",
+        );
+      }}
+    >
+      <VisibilityIcon size={22} weight="bold" />
+    </button>
+  ) : (
+    <span
+      className="shelf-visibility is-static"
+      role="img"
+      title={isPrivate ? "Private shelf" : "Public shelf"}
+      aria-label={isPrivate ? "Private shelf" : "Public shelf"}
+    >
+      <VisibilityIcon size={22} weight="bold" />
+    </span>
   );
 
   if (locked) {
@@ -178,11 +179,32 @@ export default function ShelfView({ userId }) {
         {header}
         {error && <div className="alert alert-error">{error}</div>}
         {notice && <div className="alert alert-info">{notice}</div>}
-        <div className="empty">
-          <strong>This shelf is private</strong>
-          <span>Only {owner.name} and their friends can see it.</span>
-        </div>
-        <div style={{ marginTop: 24 }}>{friendCallout}</div>
+
+        <section className="shelf-section shelf-locked reveal reveal-2">
+          <Bookcase kind="movie" crown={<div className="shelf-bar">{visibilityControl}</div>}>
+            {[0, 1, 2, 3].map((tone, index) => (
+              <div key={index} className="movie" aria-hidden="true">
+                <span className="case case-movie plastic-black">
+                  <span className="cover">
+                    <span className={`poster poster-${tone}`} />
+                  </span>
+                </span>
+                <span className="shelf-ledge" />
+              </div>
+            ))}
+          </Bookcase>
+          <LockedPrompt
+            name={owner.name}
+            relation={relation}
+            signedIn={isSignedIn}
+            onRequest={() =>
+              run(
+                () => api(`/friendship/${ownerId}`, { method: "POST" }),
+                `Friend request sent to ${owner.name}.`,
+              )
+            }
+          />
+        </section>
       </>
     );
   }
@@ -191,98 +213,70 @@ export default function ShelfView({ userId }) {
 
   const config = kindOf(kind);
   const media = shelf[kind];
-  const Noun = config.plural[0].toUpperCase() + config.plural.slice(1);
+  // one shelf per kind: your own picks first, then what friends recommended
+  const items = [...media.myShelf, ...media.recommended];
 
-  const tabs = [
-    { key: "all", label: "All", list: [...media.myShelf, ...media.recommended] },
-    { key: "picks", label: isOwner ? "My picks" : "Picks", list: media.myShelf },
-    { key: "friends", label: "From friends", list: media.recommended },
-  ];
-  const current = tabs.find((item) => item.key === tab) || tabs[0];
-
-  const emptyCopy = {
-    all: isOwner
-      ? { title: `No ${config.plural} yet`, body: `Search for a ${config.noun} and add it to your picks.` }
-      : { title: `No ${config.plural} yet`, body: "Check back later." },
-    picks: isOwner
-      ? { title: "No picks yet", body: `${Noun} you add yourself show up here.` }
-      : { title: "No picks yet", body: `${owner.name} has not added anything yet.` },
-    friends: isOwner
-      ? { title: "No recommendations yet", body: "When friends recommend something, it shows up here." }
-      : { title: "No recommendations yet", body: "Friends can recommend something for this shelf." },
-  }[current.key];
+  const emptyCopy = isOwner
+    ? { title: `No ${config.plural} yet`, body: `Search for a ${config.noun} and add it to your shelf.` }
+    : { title: `No ${config.plural} yet`, body: "Check back later." };
 
   const addTile =
-    (isOwner && current.key !== "friends" && { label: `Add a ${config.noun}` }) ||
-    (canRecommend && current.key !== "picks" && { label: `Recommend to ${owner.name}` }) ||
+    (isOwner && { label: `Add a ${config.noun}` }) ||
+    (canRecommend && { label: `Recommend to ${owner.name}` }) ||
     null;
   const limit = addTile ? PREVIEW_SLOTS - 1 : PREVIEW_SLOTS;
-  const visible = expanded ? current.list : current.list.slice(0, limit);
+  const visible = expanded ? items : items.slice(0, limit);
 
   const library = (
     <section className="shelf-section">
-      <div className="kind-switch" role="group" aria-label="Shelf type">
-        {KIND_LIST.map((item) => (
-          <button
-            key={item.key}
-            type="button"
-            aria-pressed={kind === item.key}
-            className={kind === item.key ? "active" : ""}
-            onClick={() => {
-              setKind(item.key);
-              setTab("all");
-              setExpanded(false);
-            }}
-          >
-            {item.label}
-          </button>
+      <Bookcase
+        kind={kind}
+        square={config.square}
+        crown={
+          <div className="shelf-bar">
+            <MarkTrack className="kind-switch" role="group" aria-label="Shelf type" watch={kind}>
+              {KIND_LIST.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  aria-pressed={kind === item.key}
+                  className={kind === item.key ? "active" : ""}
+                  onClick={() => {
+                    setKind(item.key);
+                    setExpanded(false);
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </MarkTrack>
+            {visibilityControl}
+          </div>
+        }
+        empty={
+          <>
+            <strong>{emptyCopy.title}</strong>
+            <span>{emptyCopy.body}</span>
+          </>
+        }
+      >
+        {visible.map((movie) => (
+          <MovieCard key={movie._id} movie={movie} kind={kind} onOpen={setSelected} />
         ))}
-      </div>
+        {addTile && (
+          <AddTile
+            label={addTile.label}
+            source={config.source}
+            kind={kind}
+            onClick={() => setAdding(true)}
+          />
+        )}
+      </Bookcase>
 
-      <div className="tabs" role="tablist" aria-label="Shelf sections">
-        {tabs.map((item) => (
-          <button
-            key={item.key}
-            type="button"
-            role="tab"
-            aria-selected={current.key === item.key}
-            className={`tab-button ${current.key === item.key ? "active" : ""}`}
-            onClick={() => {
-              setTab(item.key);
-              setExpanded(false);
-            }}
-          >
-            {item.label}
-            <span className="count">{item.list.length}</span>
-          </button>
-        ))}
-      </div>
-
-      {current.list.length === 0 && !addTile && (
-        <div className="empty">
-          <strong>{emptyCopy.title}</strong>
-          <span>{emptyCopy.body}</span>
-        </div>
-      )}
-
-      {(visible.length > 0 || addTile) && (
-        <div className="movies" role="tabpanel">
-          {visible.map((movie) => (
-            <MovieCard key={movie._id} movie={movie} kind={kind} onOpen={setSelected} />
-          ))}
-          {addTile && <AddTile
-              label={addTile.label}
-              source={config.source}
-              square={config.square}
-              onClick={() => setAdding(true)}
-            />}
-        </div>
-      )}
-
-      {current.list.length > limit && (
+      {items.length > limit && (
         <div className="show-all">
           <button type="button" className="btn btn-small btn-soft" onClick={() => setExpanded(!expanded)}>
-            {expanded ? "Show less" : `Show all ${current.list.length}`}
+            {expanded ? "Show less" : `Show all ${items.length}`}
           </button>
         </div>
       )}
@@ -361,6 +355,42 @@ export default function ShelfView({ userId }) {
         onClose={() => setSelected(null)}
       />
     </>
+  );
+}
+
+function LockedPrompt({ name, relation, signedIn, onRequest }) {
+  let title = `Add ${name} to see their shelf`;
+  let action = (
+    <button type="button" className="btn" onClick={onRequest}>
+      Add friend
+    </button>
+  );
+
+  if (!signedIn) {
+    title = `Sign in and add ${name} to see their shelf`;
+    action = (
+      <Link href="/login" className="btn">
+        Sign in
+      </Link>
+    );
+  } else if (relation?.status === "pending" && relation.direction === "sent") {
+    title = `Request sent. You'll see ${name}'s shelf once they accept.`;
+    action = null;
+  } else if (relation?.status === "pending") {
+    title = `${name} wants to be friends`;
+    action = (
+      <Link href="/friends" className="btn">
+        Answer request
+      </Link>
+    );
+  }
+
+  return (
+    <div className="locked-prompt">
+      <LockSimple size={28} weight="bold" aria-hidden="true" />
+      <strong>{title}</strong>
+      {action}
+    </div>
   );
 }
 

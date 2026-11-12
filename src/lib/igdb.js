@@ -3,7 +3,10 @@ const BASE_URL = "https://api.igdb.com/v4";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_CACHE_ENTRIES = 2000;
 const TOKEN_MARGIN_MS = 60 * 1000;
-const FIELDS = "name,summary,cover.image_id,first_release_date";
+const FIELDS = "name,summary,cover.image_id,first_release_date,platforms.abbreviation";
+// When a game is on several platforms, the shelf shows it in the case of the
+// first one found in this order (current consoles first).
+const PLATFORM_ORDER = ["PS5", "PS4", "Switch 2", "Switch", "Series X|S", "XONE", "PS3", "X360", "WiiU", "Wii", "PS2", "NGC", "PC"];
 const SEARCH_FIELDS = `${FIELDS},total_rating_count`;
 const RELEASE_TYPES = "(0,2,4,8,9,10)";
 const SEARCH_POOL = 25;
@@ -77,6 +80,11 @@ async function request(endpoint, body, retry = true) {
   return response.json();
 }
 
+function pickPlatform(raw) {
+  const names = (raw.platforms || []).map((platform) => platform.abbreviation).filter(Boolean);
+  return PLATFORM_ORDER.find((name) => names.includes(name)) || names[0] || null;
+}
+
 function toGame(raw) {
   return {
     externalId: String(raw.id),
@@ -86,6 +94,7 @@ function toGame(raw) {
     year: raw.first_release_date
       ? String(new Date(raw.first_release_date * 1000).getUTCFullYear())
       : null,
+    platform: pickPlatform(raw),
   };
 }
 

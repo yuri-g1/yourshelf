@@ -2,6 +2,8 @@ const tmdb = require("./tmdb");
 const igdb = require("./igdb");
 const openlibrary = require("./openlibrary");
 const deezer = require("./deezer");
+const fanart = require("./fanart");
+const albumart = require("./albumart");
 
 const MOVIE_BATCH_SIZE = 10;
 
@@ -11,7 +13,15 @@ async function getMovies(externalIds) {
 
   for (let i = 0; i < ids.length; i += MOVIE_BATCH_SIZE) {
     const batch = ids.slice(i, i + MOVIE_BATCH_SIZE);
-    const movies = await Promise.allSettled(batch.map((id) => tmdb.getMovie(id)));
+    // disc art and the title logo from fanart.tv ride along with the TMDB
+    // lookup; they are optional and never fail the batch. TMDB has its own
+    // title logos as a fallback.
+    const movies = await Promise.allSettled(
+      batch.map(async (id) => {
+        const [movie, art] = await Promise.all([tmdb.getMovie(id), fanart.getMovieArt(id)]);
+        return { ...movie, discArt: art.discArt, titleLogo: art.titleLogo || movie.titleLogo };
+      }),
+    );
 
     movies.forEach((outcome, index) => {
       if (outcome.status === "fulfilled") result.set(batch[index], outcome.value);
@@ -19,6 +29,20 @@ async function getMovies(externalIds) {
   }
 
   return result;
+}
+
+// Deezer albums plus real CD art when it is already known; unknown ones are
+// looked up in the background (MusicBrainz is rate limited)
+async function getAlbums(externalIds) {
+  const albums = await deezer.getAlbums(externalIds);
+
+  for (const [id, album] of albums) {
+    const discArt = albumart.cachedDisc(album.barcode);
+    if (!discArt) albumart.warm(album.barcode);
+    albums.set(id, { ...album, discArt });
+  }
+
+  return albums;
 }
 
 const catalogs = {
@@ -60,7 +84,7 @@ const catalogs = {
     source: "Deezer",
     isConfigured: deezer.isConfigured,
     search: deezer.searchAlbums,
-    getMany: deezer.getAlbums,
+    getMany: getAlbums,
     describe: deezer.describeAlbum,
     isSourceError: (error) => error instanceof deezer.DeezerError,
   },
@@ -96,6 +120,9 @@ async function withLiveData(catalog, items) {
       posterPath: fresh.posterPath || item.posterPath,
       year: fresh.year,
       creator: fresh.creator || item.creator,
+      platform: fresh.platform || item.platform,
+      discArt: fresh.discArt || null,
+      titleLogo: fresh.titleLogo || null,
     };
   });
 }
