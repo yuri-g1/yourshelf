@@ -21,7 +21,7 @@ The project has two parts:
 
 **Movies are the first media type.** The goal is one shelf that also holds games, albums and other media, so the data model and UI are planned to grow beyond movies.
 
-I built this while learning Express and MongoDB, moving on from a previous project written with Node's plain `http` module and a JSON file.
+Built to practice API design, authentication and data modeling with Express and MongoDB.
 
 ## Features
 

@@ -9,7 +9,7 @@ node_modules/
 # Next.js build output
 .next/
 
-# Local learning notes
+# Local notes
 .vibe-wise/
 
 # Local editor and tool config
