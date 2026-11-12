@@ -6,10 +6,11 @@ import { useEffect, useRef, useState } from "react";
 import Avatar from "@/components/Avatar";
 import TabBar from "@/components/TabBar";
 import DockNav from "@/components/DockNav";
+import DeleteAccountDialog from "@/components/DeleteAccountDialog";
 import { useAuth } from "@/components/AuthProvider";
 import { api } from "@/lib/api";
 
-function UserMenu({ user, onSignOut }) {
+function UserMenu({ user, onSignOut, onDelete }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -65,6 +66,17 @@ function UserMenu({ user, onSignOut }) {
           >
             Sign out
           </button>
+          <button
+            type="button"
+            role="menuitem"
+            className="user-sheet-item user-sheet-danger"
+            onClick={() => {
+              setOpen(false);
+              onDelete();
+            }}
+          >
+            Delete account
+          </button>
         </div>
       )}
     </div>
@@ -74,8 +86,9 @@ function UserMenu({ user, onSignOut }) {
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut, clearUser } = useAuth();
   const [pending, setPending] = useState(0);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -93,13 +106,18 @@ export default function Header() {
     router.push("/");
   }
 
+  function handleDeleted() {
+    setDeleting(false);
+    clearUser();
+    router.push("/");
+  }
+
   const links = user
     ? [
         { href: "/", label: "My shelf" },
-        { href: "/explore", label: "Explore" },
         { href: "/friends", label: "Friends", badge: pending },
       ]
-    : [{ href: "/", label: "Explore" }];
+    : [];
 
   return (
     <>
@@ -112,17 +130,26 @@ export default function Header() {
 
           {!loading && (
             <>
-              <div className="dock dock-top">
-                <DockNav links={links} className="dock-nav-top" />
-              </div>
+              {links.length > 0 ? (
+                <div className="dock dock-top">
+                  <DockNav links={links} className="dock-nav-top" />
+                </div>
+              ) : (
+                <span aria-hidden="true" />
+              )}
 
               <div className="header-end">
                 {user ? (
-                  <UserMenu user={user} onSignOut={handleSignOut} />
+                  <UserMenu user={user} onSignOut={handleSignOut} onDelete={() => setDeleting(true)} />
                 ) : (
-                  <Link href="/login" className="btn btn-small">
-                    Sign in
-                  </Link>
+                  <div className="header-auth">
+                    <Link href="/login" className="btn btn-small btn-ghost">
+                      Sign in
+                    </Link>
+                    <Link href="/signup" className="btn btn-small">
+                      Sign up
+                    </Link>
+                  </div>
                 )}
               </div>
             </>
@@ -130,6 +157,7 @@ export default function Header() {
         </div>
       </header>
       {!loading && user && <TabBar links={links} />}
+      <DeleteAccountDialog open={deleting} onClose={() => setDeleting(false)} onDeleted={handleDeleted} />
     </>
   );
 }

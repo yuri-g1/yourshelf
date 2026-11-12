@@ -2,21 +2,23 @@
 
 import Link from "next/link";
 import { GlobeHemisphereWest, LockSimple } from "@phosphor-icons/react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import AddTile from "@/components/AddTile";
 import Bookcase from "@/components/Bookcase";
 import Avatar from "@/components/Avatar";
 import Dialog from "@/components/Dialog";
-import Loading from "@/components/Loading";
 import MarkTrack from "@/components/MarkTrack";
 import MovieCard from "@/components/MovieCard";
 import MovieDetail from "@/components/MovieDetail";
 import MovieForm from "@/components/MovieForm";
+import { ShelfSkeleton } from "@/components/Skeletons";
 import { useAuth } from "@/components/AuthProvider";
 import { useApi } from "@/lib/api";
 import { KIND_LIST, kindOf } from "@/lib/kinds";
 
 const PREVIEW_SLOTS = 12;
+// how long the cover swings before the details appear on touch screens
+const OPEN_MS = 520;
 
 export default function ShelfView({ userId }) {
   const api = useApi();
@@ -31,18 +33,27 @@ export default function ShelfView({ userId }) {
   const [selected, setSelected] = useState(null);
   const [adding, setAdding] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [busy, setBusy] = useState(false);
+  // the case that is swinging open (or stays open behind the dialog)
+  const [opening, setOpening] = useState(null);
+  const openTimer = useRef(null);
 
   const ownerId = userId || me?._id;
   const isOwner = Boolean(me && ownerId === me._id);
   const ready = !meLoading;
+  const current = useRef(ownerId);
+  current.current = ownerId;
 
   const load = useCallback(async () => {
     if (!ownerId) return;
 
     try {
-      setShelf(await api(`/shelf/${ownerId}`));
+      const next = await api(`/shelf/${ownerId}`);
+      if (current.current !== ownerId) return;
+      setShelf(next);
       setLocked(null);
     } catch (err) {
+      if (current.current !== ownerId) return;
       if (err.status === 403 && err.data?.owner) {
         setLocked(err.data);
         setShelf(null);
@@ -54,6 +65,7 @@ export default function ShelfView({ userId }) {
     if (me && me._id !== ownerId) {
       try {
         const relationships = await api("/relationships");
+        if (current.current !== ownerId) return;
         setRelation(
           relationships.find(
             (item) => item.user?._id === ownerId && item.status !== "denied",
@@ -67,13 +79,47 @@ export default function ShelfView({ userId }) {
     }
   }, [api, ownerId, me]);
 
+  // moving from one shelf to another must not show the previous owner's
+  // shelf while the next one loads
+  useEffect(() => {
+    setShelf(null);
+    setLocked(null);
+    setRelation(null);
+    setError("");
+    setNotice("");
+    setExpanded(false);
+  }, [ownerId]);
+
   useEffect(() => {
     if (ready) load();
   }, [ready, load]);
 
+  useEffect(() => () => clearTimeout(openTimer.current), []);
+
+  // On touch screens there is no hover to open a case, so a tap first swings
+  // the cover open and the details follow once the disc is showing. With a
+  // mouse the case is already open from hovering, so the dialog comes at once.
+  function openItem(movie) {
+    if (opening) return;
+    clearTimeout(openTimer.current);
+    setOpening(movie._id);
+
+    const hover = window.matchMedia("(hover: hover)").matches;
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (hover || still) return setSelected(movie);
+
+    openTimer.current = setTimeout(() => setSelected(movie), OPEN_MS);
+  }
+
+  function closeItem() {
+    setSelected(null);
+    setOpening(null);
+  }
+
   async function run(action, message) {
     setError("");
     setNotice("");
+    setBusy(true);
 
     try {
       await action();
@@ -81,15 +127,31 @@ export default function ShelfView({ userId }) {
       await load();
     } catch (err) {
       setError(err.message);
+    } finally {
+      setBusy(false);
     }
   }
 
   if (!ready || (!shelf && !locked && !error)) {
-    return <Loading label="Loading shelf..." />;
+    return <ShelfSkeleton />;
   }
 
   if (error && !shelf && !locked) {
-    return <div className="alert alert-error">{error}</div>;
+    return (
+      <div className="empty empty-cta" role="alert">
+        <strong>This shelf could not load</strong>
+        <span>{error}</span>
+        <div>
+          <button type="button" className="btn btn-small btn-soft" onClick={() => {
+              setError("");
+              load();
+            }}
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const owner = (shelf || locked).owner;
@@ -104,6 +166,7 @@ export default function ShelfView({ userId }) {
       name={owner.name}
       relation={relation}
       signedIn={isSignedIn}
+      busy={busy}
       onRequest={() =>
         run(
           () => api(`/friendship/${ownerId}`, { method: "POST" }),
@@ -148,6 +211,7 @@ export default function ShelfView({ userId }) {
     <button
       type="button"
       className="shelf-visibility"
+      disabled={busy}
       title={isPrivate ? "Private: only you and your friends. Click to make it public." : "Public: anyone can see it. Click to make it private."}
       aria-label={isPrivate ? "Shelf is private. Make it public" : "Shelf is public. Make it private"}
       onClick={() => {
@@ -197,6 +261,7 @@ export default function ShelfView({ userId }) {
             name={owner.name}
             relation={relation}
             signedIn={isSignedIn}
+            busy={busy}
             onRequest={() =>
               run(
                 () => api(`/friendship/${ownerId}`, { method: "POST" }),
@@ -261,7 +326,13 @@ export default function ShelfView({ userId }) {
         }
       >
         {visible.map((movie) => (
-          <MovieCard key={movie._id} movie={movie} kind={kind} onOpen={setSelected} />
+          <MovieCard
+            key={movie._id}
+            movie={movie}
+            kind={kind}
+            state={opening === movie._id ? "open" : undefined}
+            onOpen={openItem}
+          />
         ))}
         {addTile && (
           <AddTile
@@ -352,17 +423,17 @@ export default function ShelfView({ userId }) {
         recommenderHref={selected?.recommendedBy ? hrefFor(selected.recommendedBy._id) : null}
         canRemove={isOwner}
         onRemove={(item) => run(() => api(`/shelf/${ownerId}/${kind}/${item._id}`, { method: "DELETE" }))}
-        onClose={() => setSelected(null)}
+        onClose={closeItem}
       />
     </>
   );
 }
 
-function LockedPrompt({ name, relation, signedIn, onRequest }) {
+function LockedPrompt({ name, relation, signedIn, busy, onRequest }) {
   let title = `Add ${name} to see their shelf`;
   let action = (
-    <button type="button" className="btn" onClick={onRequest}>
-      Add friend
+    <button type="button" className="btn" onClick={onRequest} disabled={busy}>
+      {busy ? "Sending..." : "Add friend"}
     </button>
   );
 
@@ -394,7 +465,7 @@ function LockedPrompt({ name, relation, signedIn, onRequest }) {
   );
 }
 
-function FriendCallout({ name, relation, signedIn, onRequest }) {
+function FriendCallout({ name, relation, signedIn, busy, onRequest }) {
   if (!signedIn) {
     return (
       <div className="empty">
@@ -438,8 +509,8 @@ function FriendCallout({ name, relation, signedIn, onRequest }) {
         Become friends with {name} to recommend something for their shelf.
       </span>
       <div>
-        <button className="btn btn-small" onClick={onRequest}>
-          Add friend
+        <button className="btn btn-small" onClick={onRequest} disabled={busy}>
+          {busy ? "Sending..." : "Add friend"}
         </button>
       </div>
     </div>

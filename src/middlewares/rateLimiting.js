@@ -43,5 +43,6 @@ const signupLimit = rateLimiting({ name: "signup", max: 5, windowMs: 60 * MINUTE
 const loginLimit = rateLimiting({ name: "login", max: 20, windowMs: 15 * MINUTE });
 const writeLimit = rateLimiting({ name: "write", max: 60, windowMs: MINUTE, by: "user" });
 const searchLimit = rateLimiting({ name: "search", max: 30, windowMs: MINUTE, by: "user" });
+const deleteAccountLimit = rateLimiting({ name: "delete-account", max: 5, windowMs: 15 * MINUTE, by: "user" });
 
-module.exports = { rateLimiting, signupLimit, loginLimit, writeLimit, searchLimit };
+module.exports = { rateLimiting, signupLimit, loginLimit, writeLimit, searchLimit, deleteAccountLimit };

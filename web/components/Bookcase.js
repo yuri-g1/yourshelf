@@ -15,12 +15,16 @@ export default function Bookcase({
   empty,
   kind = "movie",
   square = false,
+  rows,
   className = "",
   ...rest
 }) {
   const ref = useRef(null);
   const [columns, setColumns] = useState(0);
-  const count = Children.toArray(children).filter(Boolean).length;
+  const all = Children.toArray(children).filter(Boolean);
+  // `rows` caps the case to that many full rows at the current width
+  const items = rows && columns ? all.slice(0, columns * rows) : all;
+  const count = items.length;
 
   useLayoutEffect(() => {
     const grid = ref.current;
@@ -59,7 +63,7 @@ export default function Bookcase({
     <div className={`bookcase${crown ? " has-switch" : ""} ${className}`} {...rest}>
       {crown && <div className="bookcase-switch">{crown}</div>}
       <div className="bookcase-grid" ref={ref}>
-        {children}
+        {items}
         {Array.from({ length: spare }, (_, index) => (
           <div key={`spare-${index}`} className="shelf-spare" aria-hidden="true">
             <span className={`case case-${kind} case-empty`}>

@@ -97,6 +97,17 @@ const PEOPLE = [
       ["Man on Wire", "2008"],
     ],
   },
+  {
+    name: "ines_orbit",
+    picks: [
+      ["Arrival", "2016"],
+      ["Blade Runner 2049", "2017"],
+      ["Interstellar", "2014"],
+      ["Ex Machina", "2014"],
+      ["Annihilation", "2018"],
+      ["Moon", "2009"],
+    ],
+  },
 ];
 
 const FRIENDS = [
@@ -108,6 +119,8 @@ const FRIENDS = [
   ["lu_after_dark", "rafa_noir", "accepted"],
   ["dani_docs", "bia_meetcute", "accepted"],
   ["dani_docs", "lu_after_dark", "pending"],
+  ["ines_orbit", "theo_rewinds", "accepted"],
+  ["kenji_frames", "ines_orbit", "accepted"],
 ];
 
 const RECOMMENDATIONS = [
@@ -123,6 +136,8 @@ const RECOMMENDATIONS = [
   ["marina_cine", "bia_meetcute", ["Lady Bird", "2017"], "You will want to call your mom right after."],
   ["dani_docs", "bia_meetcute", ["Jiro Dreams of Sushi", "2011"], "Make a reservation somewhere before you watch this."],
   ["lu_after_dark", "rafa_noir", ["Get Out", "2017"], "Sharp as a thriller first, horror second."],
+  ["kenji_frames", "ines_orbit", ["2001: A Space Odyssey", "1968"], "Where all your favorites started. Big screen if you can."],
+  ["ines_orbit", "theo_rewinds", ["Contact", "1997"], "Jodie Foster and a radio telescope. Very your era."],
 ];
 
 const GAMES = {
@@ -158,6 +173,12 @@ const GAMES = {
     ["Animal Crossing: New Horizons", "2020"],
     ["Unpacking", "2021"],
   ],
+  ines_orbit: [
+    ["Mass Effect 2", "2010"],
+    ["Portal 2", "2011"],
+    ["Subnautica", "2018"],
+    ["Hades", "2020"],
+  ],
   rafa_noir: [
     ["L.A. Noire", "2011"],
     ["Disco Elysium", "2019"],
@@ -174,6 +195,7 @@ const GAME_RECOMMENDATIONS = [
   ["rafa_noir", "lu_after_dark", ["Return of the Obra Dinn", "2018"], "A murder mystery you solve with a pocket watch."],
   ["marina_cine", "bia_meetcute", ["Florence", "2018"], "Twenty minutes, one love story, almost no words."],
   ["lu_after_dark", "rafa_noir", ["Heavy Rain", "2010"], null],
+  ["theo_rewinds", "ines_orbit", ["Metroid Prime", "2002"], "Lonely planet, great music. You will get lost in it."],
 ];
 
 const BOOKS = {
@@ -207,6 +229,11 @@ const BOOKS = {
     ["The Big Sleep", "Raymond Chandler"],
     ["The Long Goodbye", "Raymond Chandler"],
     ["Gone Girl", "Gillian Flynn"],
+  ],
+  ines_orbit: [
+    ["Dune", "Frank Herbert"],
+    ["The Left Hand of Darkness", "Ursula K. Le Guin"],
+    ["Children of Time", "Adrian Tchaikovsky"],
   ],
   dani_docs: [
     ["Sapiens", "Yuval Noah Harari"],
@@ -271,6 +298,11 @@ const ALBUMS = {
     ["Blade Runner", "Vangelis"],
     ["Dummy", "Portishead"],
   ],
+  ines_orbit: [
+    ["Oxygene", "Jean-Michel Jarre"],
+    ["Moon Safari", "Air"],
+    ["Selected Ambient Works 85-92", "Aphex Twin"],
+  ],
   dani_docs: [
     ["Random Access Memories", "Daft Punk"],
     ["In Rainbows", "Radiohead"],
@@ -285,6 +317,7 @@ const ALBUM_RECOMMENDATIONS = [
   ["rafa_noir", "lu_after_dark", ["Third", "Portishead"], "Rainy night music."],
   ["dani_docs", "bia_meetcute", ["Currents", "Tame Impala"], "For dancing alone in the kitchen."],
   ["bia_meetcute", "dani_docs", ["Emotion", "Carly Rae Jepsen"], "Pure pop joy, no skips."],
+  ["kenji_frames", "ines_orbit", ["Interstellar", "Hans Zimmer"], "The organ track alone is worth it."],
 ];
 
 async function findAlbum([title, artist]) {
@@ -348,10 +381,14 @@ async function findMovie([title, year]) {
   };
 }
 
-async function createPeople() {
-  const users = {};
+// creates the demo people that do not exist yet, with their movies, and the
+// friendships and movie recommendations that involve at least one of them
+async function createPeople(existing = {}) {
+  const users = { ...existing };
+  const missing = PEOPLE.filter((person) => !existing[person.name]);
+  const isNew = (name) => missing.some((person) => person.name === name);
 
-  for (const person of PEOPLE) {
+  for (const person of missing) {
     const movies = [];
     for (const pick of person.picks) movies.push(await findMovie(pick));
 
@@ -365,7 +402,9 @@ async function createPeople() {
     console.log(`Created ${person.name} with ${movies.length} movies`);
   }
 
-  for (const [from, to, status] of FRIENDS) {
+  const friends = FRIENDS.filter(([from, to]) => isNew(from) || isNew(to));
+
+  for (const [from, to, status] of friends) {
     await Relationship.updateOne(
       { personId: users[from]._id },
       { $push: { relationships: { friendId: users[to]._id, status } } },
@@ -373,9 +412,11 @@ async function createPeople() {
     );
   }
 
-  console.log(`Created ${FRIENDS.length} friendships`);
+  console.log(`Created ${friends.length} friendships`);
 
-  for (const [from, to, pick, note] of RECOMMENDATIONS) {
+  const recommendations = RECOMMENDATIONS.filter(([from, to]) => isNew(from) || isNew(to));
+
+  for (const [from, to, pick, note] of recommendations) {
     users[to].shelf.movies.push({
       ...(await findMovie(pick)),
       recommendedBy: users[from]._id,
@@ -384,7 +425,7 @@ async function createPeople() {
     await users[to].save();
   }
 
-  console.log(`Created ${RECOMMENDATIONS.length} movie recommendations`);
+  console.log(`Created ${recommendations.length} movie recommendations`);
 
   return users;
 }
@@ -427,10 +468,12 @@ async function main() {
   const existing = await User.find({ name: { $in: names } });
   let users;
 
-  if (existing.length === 0) {
-    users = await createPeople();
+  const known = Object.fromEntries(existing.map((user) => [user.name, user]));
+
+  if (existing.length < names.length) {
+    users = await createPeople(known);
   } else {
-    users = Object.fromEntries(existing.map((user) => [user.name, user]));
+    users = known;
     console.log(`Demo users already exist (${existing.length}). Skipping movies.`);
   }
 

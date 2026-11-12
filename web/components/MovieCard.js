@@ -7,7 +7,9 @@ import { caseFor } from "@/lib/platforms";
 // focusing swings the front cover open on its hinge to show what is inside:
 // a disc printed with the cover art (movies, games, albums) or the first
 // page (books).
-export default function MovieCard({ movie, kind = "movie", onOpen }) {
+// `state` forces the case "open" or "closed" regardless of hover, for touch
+// screens and while the detail dialog is showing.
+export default function MovieCard({ movie, kind = "movie", onOpen, state, className = "" }) {
   const recommender = movie.recommendedBy;
   const art = movie.posterPath ? kindOf(kind).image(movie.posterPath) : null;
   // games ship in their platform case (PlayStation blue, Switch red, Xbox
@@ -21,7 +23,7 @@ export default function MovieCard({ movie, kind = "movie", onOpen }) {
   return (
     <button
       type="button"
-      className={`movie${recommender ? " movie-recommended" : ""}`}
+      className={`movie${recommender ? " movie-recommended" : ""}${state ? ` is-${state}` : ""}${className ? ` ${className}` : ""}`}
       onClick={() => onOpen(movie)}
       aria-label={label}
     >

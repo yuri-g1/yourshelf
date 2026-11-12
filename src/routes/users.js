@@ -1,8 +1,12 @@
 const express = require("express");
 const User = require("../models/User");
+const Session = require("../models/Session");
+const Relationship = require("../models/Relationship");
 const { identifyUser } = require("../middlewares/IdentifyUser");
-const { writeLimit } = require("../middlewares/rateLimiting");
+const { writeLimit, deleteAccountLimit } = require("../middlewares/rateLimiting");
 const { catalogs } = require("../lib/catalogs");
+const { verifyPassword } = require("../lib/password");
+const { destroySession } = require("../lib/sessions");
 
 const router = express.Router();
 
@@ -77,6 +81,40 @@ router.patch("/me/shelf", identifyUser, writeLimit, async (req, res) => {
   await req.user.save();
 
   return res.json({ visibility });
+});
+
+// Deletes the account and everything tied to it: the user (and so their
+// shelf), their friendships on both sides, every recommendation they left on
+// other people's shelves, and all their sessions. Asks for the password again
+// so a session left open on someone else's device can't wipe the account.
+router.delete("/me", identifyUser, deleteAccountLimit, async (req, res) => {
+  const password = String(req.body?.password ?? "");
+  const user = await User.findById(req.user._id).select("+passwordHash");
+
+  if (!user || !(await verifyPassword(password, user.passwordHash))) {
+    return res.status(401).json({ error: "Wrong password" });
+  }
+
+  const id = user._id;
+
+  await Promise.all(
+    Object.values(catalogs).map(({ field }) =>
+      User.updateMany(
+        { [`shelf.${field}.recommendedBy`]: id },
+        { $pull: { [`shelf.${field}`]: { recommendedBy: id } } },
+      ),
+    ),
+  );
+  await Relationship.deleteOne({ personId: id });
+  await Relationship.updateMany(
+    { "relationships.friendId": id },
+    { $pull: { relationships: { friendId: id } } },
+  );
+  await User.deleteOne({ _id: id });
+  await destroySession(req, res);
+  await Session.deleteMany({ user: id });
+
+  return res.status(204).end();
 });
 
 module.exports = router;

@@ -1,7 +1,6 @@
-import PublicShelves from "@/components/PublicShelves";
+import { redirect } from "next/navigation";
 
-export const metadata = { title: "Explore | yourshelf" };
-
+// Explore now lives on the home page; keep old links working
 export default function ExplorePage() {
-  return <PublicShelves />;
+  redirect("/#shelves");
 }

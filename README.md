@@ -102,6 +102,7 @@ A title is a recommendation when it has `recommendedBy`. Movies picked from TMDB
 | GET | `/users` | anyone (names and shelf visibility) |
 | GET | `/me` | signed-in user |
 | PATCH | `/me/shelf` | signed-in user (set `visibility`) |
+| DELETE | `/me` | signed-in user (`{ password }`; deletes the account, shelf, friendships, recommendations made to others and all sessions) |
 | GET | `/shelf/:id` | anyone if public; owner and friends if private |
 | POST | `/shelf/:id/movie` | the shelf owner |
 | DELETE | `/shelf/:id/movie/:movieId` | the shelf owner |

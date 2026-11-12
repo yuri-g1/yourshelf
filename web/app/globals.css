@@ -59,6 +59,7 @@ body {
 }
 
 body {
+  overflow-x: clip;
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans), system-ui, sans-serif;
@@ -894,6 +895,143 @@ textarea {
   color: var(--text);
 }
 
+.user-sheet-danger {
+  color: var(--danger);
+}
+
+.detail.delete-dialog {
+  width: min(480px, calc(100vw - 32px));
+}
+
+.delete-account {
+  padding: 24px;
+}
+
+.delete-account h2 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: -0.015em;
+}
+
+.delete-account p,
+.delete-account ul {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.delete-account ul {
+  padding-left: 20px;
+}
+
+.delete-account .muted {
+  font-size: 14px;
+}
+
+.delete-account .muted a {
+  color: var(--text);
+}
+
+.delete-account-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-bottom: 12px;
+}
+
+.footer-links a {
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.footer-links a:hover {
+  text-decoration: underline;
+}
+
+.footer-note {
+  margin: 0;
+  max-width: 90ch;
+}
+
+.auth-legal {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.auth-legal a {
+  color: var(--text);
+}
+
+.legal {
+  max-width: 72ch;
+  padding: 24px 0 56px;
+}
+
+.legal-head .page-sub {
+  margin-bottom: 32px;
+}
+
+.legal-updated {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.legal-body {
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.legal-body section + section {
+  margin-top: 36px;
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+}
+
+.legal-body h2 {
+  margin: 0 0 12px;
+  font-size: 22px;
+  letter-spacing: -0.015em;
+}
+
+.legal-body h3 {
+  margin: 20px 0 8px;
+  font-size: 16px;
+}
+
+.legal-body p,
+.legal-body ul {
+  margin: 0 0 12px;
+}
+
+.legal-body ul {
+  padding-left: 20px;
+}
+
+.legal-body li + li {
+  margin-top: 6px;
+}
+
+.legal-body a {
+  color: var(--text);
+  text-underline-offset: 2px;
+}
+
+.legal-body code {
+  font-size: 0.9em;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--surface-2);
+}
+
 .btn-small {
   min-height: 36px;
 }
@@ -1578,6 +1716,21 @@ button.movie:focus-visible .poster {
     justify-content: space-between;
   }
 
+  /* signed out there is no bottom bar, so the top dock keeps its links;
+     tighten it so the Sign in button still fits on a phone */
+  .header-inner {
+    gap: 8px;
+  }
+
+  .header-inner .dock-top {
+    height: 50px;
+    padding: 0 5px;
+  }
+
+  .header-end .btn-small {
+    padding: 7px 12px;
+  }
+
   .logo-mark {
     height: 42px;
     margin-left: -12px;
@@ -1588,7 +1741,8 @@ button.movie:focus-visible .poster {
   }
 
   .dock-top .dock-link {
-    padding: 0 12px;
+    height: 40px;
+    padding: 0 11px;
   }
 
   .user-trigger .avatar {
@@ -2624,5 +2778,756 @@ button.movie:focus-visible .poster {
 @media (max-width: 640px) {
   .locked-prompt strong {
     font-size: 17px;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Loading: placeholders shaped like the content they stand in for.
+   Bones share one shimmer, offset by --i so a grid ripples instead of
+   blinking in unison. Reduced motion leaves them still (rule above).
+   ------------------------------------------------------------------ */
+
+.skeleton {
+  animation-delay: calc(var(--i, 0) * -0.14s);
+}
+
+.sk-avatar {
+  display: block;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sk-avatar-lg {
+  width: 64px;
+  height: 64px;
+}
+
+.sk-title {
+  display: block;
+  width: min(260px, 55vw);
+  height: 36px;
+  border-radius: 10px;
+}
+
+.sk-text {
+  display: block;
+  width: min(220px, 50vw);
+  height: 12px;
+  margin-top: 12px;
+  border-radius: 6px;
+}
+
+.sk-short {
+  width: 45%;
+}
+
+.sk-tabs {
+  justify-content: flex-start;
+  gap: 30px;
+  height: 42px;
+}
+
+.sk-tab {
+  display: block;
+  height: 16px;
+  border-radius: 6px;
+}
+
+.sk-grow {
+  flex: 1;
+}
+
+.sk-name {
+  display: block;
+  width: 60%;
+  height: 14px;
+  border-radius: 7px;
+}
+
+.sk-meta {
+  display: block;
+  width: 85%;
+  height: 10px;
+  margin-top: 8px;
+  border-radius: 5px;
+}
+
+.sk-cover {
+  display: block;
+  aspect-ratio: 2 / 3;
+  border-radius: 8px;
+}
+
+.sk-input {
+  display: block;
+  height: 46px;
+  margin: 16px 0 20px;
+  border-radius: var(--r-field);
+}
+
+.sk-row {
+  justify-content: flex-start;
+  min-height: 50px;
+}
+
+.sk-card,
+.sk-card:hover {
+  transform: none;
+}
+
+.slow-note {
+  margin: 20px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+  max-width: 60ch;
+}
+
+.slow-note:empty {
+  display: none;
+}
+
+/* ---- small shared bits ---- */
+
+.tag-quiet {
+  background: var(--surface-2);
+  color: var(--muted);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.btn-quiet {
+  box-shadow: none;
+  color: var(--muted);
+}
+
+.btn-quiet:hover {
+  color: var(--danger);
+}
+
+.empty-cta > div {
+  margin-top: 12px;
+}
+
+.row-person-text {
+  display: grid;
+  min-width: 0;
+}
+
+.row-person-text small {
+  font-size: 12px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- person card: the name link stretches over the whole card ---- */
+
+.person-card {
+  position: relative;
+}
+
+.person-card:has(.person-link:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.person-id {
+  flex: 1;
+  min-width: 0;
+}
+
+.person-link {
+  display: block;
+  font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.person-link:focus-visible {
+  outline: none;
+}
+
+.person-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.person-action,
+.person-footer {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.person-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.person-posters-locked {
+  display: grid;
+  grid-template-columns: 1fr;
+  place-items: center;
+  aspect-ratio: 8 / 3;
+  border-radius: 10px;
+  background: repeating-linear-gradient(135deg, var(--line) 0 1px, transparent 1px 12px), var(--surface-2);
+  color: var(--muted);
+}
+
+.people-tight {
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+}
+
+/* a single swipeable row of shelves */
+.people-scroll {
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: min(270px, 78%);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  padding: 6px 4px 16px;
+  margin: -6px -4px 0;
+}
+
+.people-scroll > * {
+  scroll-snap-align: start;
+}
+
+/* ---- explore ---- */
+
+.explore-sub {
+  margin-bottom: 0;
+}
+
+.explore-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 24px;
+  margin: -12px 0 28px;
+}
+
+.explore-search {
+  flex: 1 1 260px;
+  max-width: 360px;
+}
+
+.explore-kinds {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.explore-kinds-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.chip-track {
+  display: inline-flex;
+  max-width: 100%;
+  padding: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.chip-track button {
+  flex-shrink: 0;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 15px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--muted);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.25s var(--ease);
+}
+
+.chip-track button:not(.active):hover {
+  color: var(--text);
+}
+
+.chip-track button.active {
+  color: var(--on-dock-mark);
+}
+
+.chip-track button:active {
+  transform: scale(0.97);
+}
+
+@media (pointer: coarse) {
+  .chip-track button {
+    min-height: 44px;
+  }
+}
+
+.explore-private {
+  margin-top: 56px;
+  max-width: 640px;
+}
+
+.explore-private h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  font-size: 20px;
+  letter-spacing: -0.015em;
+}
+
+/* ---- friends ---- */
+
+.requests {
+  margin-bottom: 32px;
+}
+
+.friends-layout {
+  display: grid;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (min-width: 960px) {
+  .friends-layout {
+    grid-template-columns: minmax(0, 1.75fr) minmax(300px, 1fr);
+    gap: 32px;
+  }
+
+  .friends-aside {
+    position: sticky;
+    top: 96px;
+  }
+}
+
+.friends-aside h2 {
+  margin-bottom: 14px;
+}
+
+.aside-label {
+  margin: 20px 0 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.friends-aside .rows {
+  margin-top: 14px;
+}
+
+.aside-label + .rows {
+  margin-top: 0;
+}
+
+.aside-empty {
+  margin: 16px 0 0;
+  font-size: 14px;
+}
+
+.aside-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 18px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.aside-group {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.aside-group h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+/* ---- landing (signed out) ---- */
+
+.landing-hero {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  padding-top: 24px;
+}
+
+.landing-title {
+  margin: 0 auto;
+  max-width: 14ch;
+  font-size: clamp(40px, 6vw, 64px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.02;
+}
+
+.landing-sub {
+  margin: 20px auto 28px;
+  max-width: 40ch;
+  font-size: 18px;
+  color: var(--muted);
+}
+
+.landing-ctas {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .landing-wall {
+    margin-top: 64px;
+  }
+
+}
+
+.avatar-stack {
+  display: inline-flex;
+}
+
+.avatar-stack .avatar + .avatar {
+  margin-left: -7px;
+}
+
+.avatar-stack .avatar {
+  box-shadow: 0 0 0 2px var(--bg);
+}
+
+/* a shelf that runs from one edge of the screen to the other; its title
+   stays lined up with the page content */
+:root {
+  --gutter: 16px;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --gutter: 32px;
+  }
+}
+
+.bookcase-bleed {
+  --screen: calc(100vw - var(--scrollbar, 0px));
+  width: var(--screen);
+  margin-left: calc(50% - var(--screen) / 2);
+  margin-bottom: 24px;
+}
+
+
+/* no wall brackets at the screen edges: the plank runs off the screen */
+.bookcase-bleed .bookcase-grid > * > .shelf-ledge::before,
+.bookcase-bleed .bookcase-grid > * > .shelf-ledge::after {
+  content: none;
+}
+
+.bookcase-bleed .bookcase-grid > * > .shelf-ledge {
+  border-radius: 0;
+}
+
+/* every case on this shelf stands open, so you see the disc, cartridge or
+   record inside. They swing open one by one on load, left to right; hovering a
+   case closes it again to show its cover. */
+.bookcase-open .movie .cover {
+  transform: rotateY(-78deg);
+  filter: brightness(0.92);
+  animation: case-open 0.7s var(--ease) backwards;
+  animation-delay: calc(0.5s + var(--col, 0) * 0.28s);
+}
+
+.bookcase-open .movie .disc {
+  transform: rotate(50deg);
+}
+
+@keyframes case-open {
+  from {
+    transform: none;
+    filter: none;
+  }
+}
+
+@media (hover: hover) {
+  .bookcase-open .movie:hover .cover {
+    transform: none;
+    filter: none;
+  }
+
+  .bookcase-open .movie:hover .disc {
+    transform: none;
+  }
+}
+
+.bookcase-open .movie:focus-visible .cover {
+  transform: none;
+  filter: none;
+}
+
+.header-auth {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .header-auth {
+    gap: 4px;
+  }
+
+  .header-auth .btn-ghost {
+    box-shadow: none;
+    padding-inline: 10px;
+  }
+}
+
+/* ---- forced case states (touch screens and the open detail dialog) ----
+   is-open: the case stands open like on hover (a tap on the shelf page
+   swings it open before the details appear, and it stays open behind
+   them). is-closed: a landing case tapped shut to show its cover. */
+
+.bookcase .movie.is-open {
+  z-index: 2;
+}
+
+.bookcase .movie.is-open .case {
+  transform: translateY(-4px);
+}
+
+.bookcase .movie.is-open .cover {
+  transform: rotateY(-78deg);
+  filter: brightness(0.92);
+}
+
+.bookcase .movie.is-open .disc {
+  transform: rotate(50deg);
+}
+
+.bookcase-open .movie.is-closed .cover {
+  transform: none;
+  filter: none;
+  animation: none;
+}
+
+.bookcase-open .movie.is-closed .disc {
+  transform: none;
+}
+
+/* ---- dialog: fade the page behind it, and fade out on close ---- */
+
+.detail[open]::backdrop {
+  animation: backdrop-in 0.35s var(--ease) both;
+}
+
+.detail.is-closing {
+  animation: dialog-out 0.22s var(--ease) forwards;
+}
+
+.detail.is-closing::backdrop {
+  animation: backdrop-out 0.22s var(--ease) forwards;
+}
+
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes backdrop-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes dialog-out {
+  to {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+}
+
+/* ---- landing: browse every public shelf (what used to be Explore) ---- */
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+.landing-browse {
+  margin-top: 168px;
+  scroll-margin-top: 96px;
+}
+
+/* right-aligned, a size up from the other section titles */
+.landing-browse h2 {
+  margin: 0 0 32px auto;
+  max-width: 20ch;
+  font-size: clamp(32px, 4.8vw, 54px);
+  letter-spacing: -0.035em;
+  line-height: 1.04;
+  text-align: right;
+}
+
+@media (max-width: 860px) {
+  .landing-browse h2 {
+    margin-inline: auto;
+    text-align: center;
+  }
+}
+
+.landing-browse .explore-bar {
+  margin-top: 0;
+}
+
+@media (max-width: 640px) {
+  .landing-browse {
+    margin-top: 112px;
+  }
+}
+
+/* ---- landing: the pitch beside one real recommendation ----
+   Text on the left, a three-case shelf on the right, vertically centred
+   on each other. Phones stack them and centre the text. Once in view the
+   recommended case drops into its gap on the shelf. */
+
+.story {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: 64px;
+  margin-top: 112px;
+}
+
+.story-copy h2 {
+  margin: 0;
+  font-size: clamp(32px, 4.8vw, 54px);
+  letter-spacing: -0.035em;
+  line-height: 1.04;
+}
+
+.story-copy p {
+  margin: 20px 0 0;
+  max-width: 44ch;
+  font-size: 18px;
+  color: var(--muted);
+}
+
+.story-shelf {
+  min-width: 0;
+}
+
+/* exactly three slots: their pick, the recommendation, their pick */
+.story-shelf .bookcase-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.story-shelf .bookcase {
+  padding-bottom: 40px;
+}
+
+.story-caption {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .story:not(.is-seen) .story-landing .case {
+    opacity: 0;
+  }
+
+  /* only the case falls; its stretch of plank stays in place. backwards
+     fill so the hover lift still works once it has landed */
+  .story.is-seen .story-landing .case {
+    animation: story-case-drop 0.9s cubic-bezier(0.34, 1.4, 0.64, 1) 0.3s backwards;
+  }
+}
+
+@keyframes story-case-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-56px);
+  }
+  60% {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 860px) {
+  .story {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+    text-align: center;
+  }
+
+  .story-copy p {
+    margin-inline: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .story {
+    margin-top: 72px;
+  }
+}
+
+/* ---- landing: shelves to browse, two rows of four ---- */
+
+.people-four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 1023px) {
+  .people-four {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .people-four {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.browse-cta {
+  display: flex;
+  justify-content: center;
+  margin-top: 36px;
+}
+
+.browse-cta .btn {
+  padding: 14px 24px;
+  font-size: 16px;
+}
+
+.browse-cta .btn svg {
+  transition: transform 0.3s var(--ease);
+}
+
+.browse-cta .btn:hover svg {
+  transform: translateX(3px);
+}
+
+@media (max-width: 560px) {
+  .browse-cta .btn {
+    white-space: normal;
+    text-align: center;
   }
 }

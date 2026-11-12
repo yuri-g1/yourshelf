@@ -127,6 +127,13 @@ export default function AuthForm({ mode }) {
           <button className="btn" disabled={saving}>
             {saving ? "Please wait..." : isSignup ? "Create account" : "Sign in"}
           </button>
+
+          {isSignup && (
+            <p className="auth-legal">
+              By creating an account you agree to the <Link href="/terms">Terms of Service</Link> and confirm you
+              have read the <Link href="/privacy">Privacy Policy</Link>. You must be 13 or older.
+            </p>
+          )}
         </form>
 
         <p className="auth-switch">
