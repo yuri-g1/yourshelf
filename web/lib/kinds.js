@@ -62,3 +62,7 @@ export const KIND_LIST = Object.values(KINDS);
 export function kindOf(key) {
   return KINDS[key] || KINDS.movie;
 }
+
+export function mediaHref(kind, externalId) {
+  return `/${kindOf(kind).key}/${encodeURIComponent(externalId)}`;
+}

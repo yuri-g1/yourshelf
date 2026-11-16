@@ -49,6 +49,8 @@ const catalogs = {
     isConfigured: tmdb.isConfigured,
     search: tmdb.searchMovies,
     getMany: getMovies,
+    idPattern: /^\d{1,12}$/,
+    details: tmdb.getMovieDetails,
     isSourceError: (error) => error instanceof tmdb.TmdbError,
   },
   game: {
@@ -59,6 +61,8 @@ const catalogs = {
     isConfigured: igdb.isConfigured,
     search: igdb.searchGames,
     getMany: igdb.getGames,
+    idPattern: /^\d{1,12}$/,
+    details: igdb.getGameDetails,
     isSourceError: (error) => error instanceof igdb.IgdbError,
   },
   book: {
@@ -70,6 +74,8 @@ const catalogs = {
     search: openlibrary.searchBooks,
     getMany: openlibrary.getBooks,
     describe: openlibrary.describeBook,
+    idPattern: /^OL\d{1,12}W$/,
+    details: openlibrary.getBookDetails,
     isSourceError: (error) => error instanceof openlibrary.OpenLibraryError,
   },
   album: {
@@ -81,6 +87,8 @@ const catalogs = {
     search: deezer.searchAlbums,
     getMany: getAlbums,
     describe: deezer.describeAlbum,
+    idPattern: /^\d{1,15}$/,
+    details: deezer.getAlbumDetails,
     isSourceError: (error) => error instanceof deezer.DeezerError,
   },
 };

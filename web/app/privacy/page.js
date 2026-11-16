@@ -168,6 +168,12 @@ export default function PrivacyPage() {
             so they receive your IP address and browser details the same way any website you visit does. Their own
             privacy policies apply to that.
           </li>
+          <li>
+            <strong>Trailers and previews</strong> on a title&apos;s page come from YouTube and Deezer. Video
+            thumbnails load from YouTube&apos;s image servers, and a trailer only loads its player, through
+            YouTube&apos;s privacy-enhanced mode, after you press play. Album previews stream from Deezer when you
+            play a track.
+          </li>
         </ul>
 
         <h3>When the law requires it</h3>

@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, PencilSimple, Quotes, X } from "@phosphor-icons/react";
+import { ArrowRight, PencilSimple, Quotes, Star, Trash, X } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import Avatar from "@/components/Avatar";
 import ConfirmButton from "@/components/ConfirmButton";
 import Dialog from "@/components/Dialog";
 import Poster from "@/components/Poster";
-import { kindOf } from "@/lib/kinds";
+import { ratingText, useDetails } from "@/lib/details";
+import { kindOf, mediaHref } from "@/lib/kinds";
 import { toneOf } from "@/lib/tone";
 
 const CLAMP = 320;
@@ -28,8 +29,11 @@ export default function MovieDetail({ movie: current, kind, recommenderHref, can
   const art = movie && (movie.cover || (movie.posterPath ? config.image(movie.posterPath) : null));
   const desc = movie?.desc?.trim();
   const long = desc && desc.length > CLAMP;
-  const href = movie?.externalId && config.link ? config.link(movie.externalId) : null;
   const facts = movie ? [movie.year, movie.platform].filter(Boolean) : [];
+  const { data: details } = useDetails(kind, current?.externalId);
+  const live = details && details.externalId === movie?.externalId ? details : null;
+  const rating = ratingText(live?.rating);
+  const moreHref = movie?.externalId ? mediaHref(kind, movie.externalId) : null;
 
   return (
     <Dialog open={Boolean(current)} onClose={onClose} labelledBy="detail-title" className="item-dialog">
@@ -73,6 +77,27 @@ export default function MovieDetail({ movie: current, kind, recommenderHref, can
               </div>
               <h2 id="detail-title">{movie.title}</h2>
               {movie.creator && <p className="item-creator">{movie.creator}</p>}
+              {live && (rating || live.highlights.length > 0) && (
+                <p className="item-highlights">
+                  {rating && (
+                    <span className="item-rating">
+                      <Star size={13} weight="fill" aria-hidden="true" />
+                      {rating}
+                    </span>
+                  )}
+                  {live.highlights.map((entry) => (
+                    <span key={entry}>{entry}</span>
+                  ))}
+                </p>
+              )}
+              {moreHref && (
+                <div className="item-cta">
+                  <Link className="btn btn-small" href={moreHref}>
+                    More details
+                    <ArrowRight size={15} weight="bold" aria-hidden="true" />
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
 
@@ -112,25 +137,22 @@ export default function MovieDetail({ movie: current, kind, recommenderHref, can
               </p>
             )}
 
-            {(href || canRemove) && (
+            {canRemove && (
               <div className="item-actions">
-                {href && (
-                  <a className="btn btn-small btn-ghost" href={href} target="_blank" rel="noopener noreferrer">
-                    Open on {config.source}
-                    <ArrowUpRight size={15} weight="bold" aria-hidden="true" />
-                  </a>
-                )}
-                {canRemove && (
-                  <ConfirmButton
-                    className="item-remove"
-                    label="Remove"
-                    confirmLabel="Remove it"
-                    onConfirm={async () => {
-                      onClose();
-                      await onRemove(movie);
-                    }}
-                  />
-                )}
+                <ConfirmButton
+                  className="item-remove"
+                  label={
+                    <>
+                      <Trash size={15} weight="bold" aria-hidden="true" />
+                      Remove from shelf
+                    </>
+                  }
+                  confirmLabel="Remove it"
+                  onConfirm={async () => {
+                    onClose();
+                    await onRemove(movie);
+                  }}
+                />
               </div>
             )}
           </div>
