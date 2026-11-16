@@ -66,6 +66,7 @@ function topForField(field, since) {
         title: "$item.title",
         posterPath: "$item.posterPath",
         creator: "$item.creator",
+        desc: "$item.desc",
       },
     },
   ]);

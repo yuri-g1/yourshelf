@@ -381,9 +381,8 @@ export default function ShelfView({ userId }) {
             key={kind}
             kind={kind}
             title={`Add a ${config.noun}`}
-            subtitle="It goes straight to your picks."
+            subtitle={`Search ${config.source}, or add your own.`}
             submitLabel="Add to shelf"
-            successMessage="Added. Add another or press Done."
             onDone={() => setAdding(false)}
             onSubmit={(form) =>
               api(`/shelf/${ownerId}/${kind}`, {
@@ -403,9 +402,8 @@ export default function ShelfView({ userId }) {
             key={kind}
             kind={kind}
             title={`Recommend a ${config.noun} to ${owner.name}`}
-            subtitle="It appears on their shelf with your note."
+            subtitle="It lands on their shelf with your note."
             submitLabel="Recommend"
-            successMessage={`Sent to ${owner.name}. Recommend another or press Done.`}
             withNote
             onDone={() => setAdding(false)}
             onSubmit={(form) =>

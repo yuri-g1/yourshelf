@@ -9,6 +9,7 @@ export const KINDS = {
     placeholder: "The Matrix, Spirited Away...",
     descLabel: "Synopsis",
     verb: "watch",
+    link: (id) => `https://www.themoviedb.org/movie/${id}`,
     image: (path, size) => `https://image.tmdb.org/t/p/${size === "small" ? "w92" : "w342"}${path}`,
   },
   game: {
@@ -35,6 +36,7 @@ export const KINDS = {
     descLabel: "Synopsis",
     creatorLabel: "Author",
     verb: "read",
+    link: (id) => `https://openlibrary.org/works/${id}`,
     image: (path, size) => `https://covers.openlibrary.org/b/id/${path}-${size === "small" ? "S" : "L"}.jpg`,
   },
   album: {
@@ -48,6 +50,7 @@ export const KINDS = {
     descLabel: "About",
     creatorLabel: "Artist",
     verb: "listen to",
+    link: (id) => `https://www.deezer.com/album/${id}`,
     square: true,
     image: (path, size) =>
       `https://cdn-images.dzcdn.net/images/cover/${path}/${size === "small" ? "120x120" : "500x500"}-000000-80-0-0.jpg`,

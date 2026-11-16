@@ -6,6 +6,7 @@ const trendingItemSchema = mongoose.Schema(
     title: { type: String, required: true },
     posterPath: String,
     creator: String,
+    desc: String,
     count: { type: Number, required: true },
   },
   { _id: false },

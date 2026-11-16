@@ -16,10 +16,11 @@ export default function Poster({ title, posterPath, src, kind }) {
     );
   }
 
+  const label = title?.trim() || "Untitled";
+
   return (
-    <div className={`poster poster-${toneOf(title)}${shape}`} aria-hidden="true">
-      <span className="poster-mark">yourshelf</span>
-      <span className="poster-title">{title}</span>
+    <div className={`poster poster-blank poster-${toneOf(label)}${shape}`} aria-hidden="true">
+      <span className="poster-label-title">{label}</span>
     </div>
   );
 }
