@@ -3625,3 +3625,46 @@ button.movie:focus-visible .poster {
     text-align: center;
   }
 }
+
+.trending-list {
+  display: grid;
+  gap: 14px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trending-item {
+  display: grid;
+  grid-template-columns: 36px 64px 1fr;
+  align-items: center;
+  gap: 16px;
+}
+
+.trending-rank {
+  color: var(--muted);
+  font-size: 22px;
+  font-weight: 650;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.trending-poster .poster {
+  width: 64px;
+}
+
+.trending-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.trending-text strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trending-empty {
+  margin-top: 28px;
+}

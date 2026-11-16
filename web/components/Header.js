@@ -142,9 +142,13 @@ export default function Header() {
   const links = user
     ? [
         { href: "/", label: "My shelf" },
+        { href: "/trending", label: "Trending" },
         { href: "/friends", label: "Friends", badge: pending },
       ]
-    : [{ href: "/", label: "Home" }];
+    : [
+        { href: "/", label: "Home" },
+        { href: "/trending", label: "Trending" },
+      ];
 
   function renderLinks(className) {
     return links.map((link) => {
