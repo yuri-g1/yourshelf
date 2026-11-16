@@ -28,8 +28,6 @@ export async function api(path, { method = "GET", body } = {}) {
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    // The API always answers in JSON. A 5xx without a JSON body comes from the proxy,
-    // which means the API itself is down or unreachable, not that the request was wrong.
     if (response.status >= 500 && !data?.error) throw offline(response.status);
     throw new ApiError(response.status, data);
   }

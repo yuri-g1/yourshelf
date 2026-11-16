@@ -409,7 +409,6 @@ textarea {
   color: var(--muted);
 }
 
-/* Add friend / request sent, on the right of the header. */
 .profile-action {
   display: flex;
   flex-shrink: 0;
@@ -639,8 +638,6 @@ textarea {
   }
 }
 
-/* The person takes whatever room the buttons leave and truncates, so a wider label like
-   "Sending..." squeezes the name instead of wrapping the button onto its own line. */
 .row-person {
   flex: 1 1 0;
   display: flex;
@@ -678,7 +675,6 @@ textarea {
   color: var(--muted);
 }
 
-/* Bones take the brand's lilac instead of neutral grey, so loading reads as part of the page. */
 .skeleton {
   --bone: color-mix(in srgb, var(--soft) 32%, var(--surface-2));
   --bone-hi: var(--surface);
@@ -816,7 +812,6 @@ textarea {
   letter-spacing: -0.02em;
 }
 
-/* Auth form states: errors sit under the field they belong to. */
 input.is-invalid,
 input.is-invalid:focus {
   border-color: var(--danger);
@@ -2194,7 +2189,6 @@ button.movie:focus-visible .poster {
   width: 90%;
 }
 
-/* Printed fallback disc and real disc art share one spot; the art fades in over it. */
 .case-inside > .disc {
   grid-area: 1 / 1;
   transition: transform 1.2s var(--ease), opacity 0.35s var(--ease);
@@ -2624,7 +2618,6 @@ button.movie:focus-visible .poster {
   transform: scale(0.96);
 }
 
-/* A closed slot, not a button: quieter mark, no hover or press feedback. */
 .add-tile.is-locked {
   cursor: default;
 }
@@ -2658,8 +2651,6 @@ button.movie:focus-visible .poster {
   outline-offset: 3px;
 }
 
-/* Loading case: same plastic shell as a real one, with a blank plum-tinted cover and a
-   slow light sweep like a reflection crossing the plastic. */
 .bookcase .skeleton-cover {
   display: block;
   width: calc(var(--W) - var(--rim) * 2);
@@ -2955,7 +2946,6 @@ button.movie:focus-visible .poster {
   transform: none;
 }
 
-/* Bones sized to the real controls they stand in for, so nothing shifts on load. */
 .sk-avatar-sm {
   width: 30px;
   height: 30px;

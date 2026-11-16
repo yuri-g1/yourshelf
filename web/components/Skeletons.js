@@ -5,11 +5,6 @@ import Bookcase from "@/components/Bookcase";
 import { useSlow } from "@/lib/api";
 import { useShape } from "@/lib/shape";
 
-// Skeletons follow two rules so the page does not jump when data lands:
-// 1. Fixed chrome (headings, labels) renders as real text, not bones.
-// 2. Variable parts (how many items, rows, people) copy the shape remembered from the
-//    last visit. With no memory yet they stay small (one shelf row) instead of guessing big.
-
 const FIRST_VISIT_SLOTS = 8;
 const TAB_WIDTHS = [68, 60, 56, 66];
 
@@ -27,13 +22,9 @@ function Bone({ className = "", index = 0, width }) {
   return <span className={`skeleton ${className}`} style={{ "--i": index, width }} aria-hidden="true" />;
 }
 
-// A plain function, not a component: Bookcase counts its direct children to work out
-// rows and filler slots, so the slots must arrive as separate children, not one element.
 export function shelfSlots(count = 6, kind = "movie") {
   return Array.from({ length: count }, (_, index) => (
     <div key={index} className="shelf-skeleton" aria-hidden="true">
-      {/* A real, closed plastic case with a blank cover, so loading looks like the shelf
-          it turns into instead of grey boxes on the wood. */}
       <span className={`case case-${kind} plastic-black case-skeleton`}>
         <span className="skeleton-cover" style={{ "--i": index }} />
       </span>

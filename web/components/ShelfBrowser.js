@@ -17,8 +17,6 @@ export default function ShelfBrowser() {
   const [failed, setFailed] = useState(false);
   const shape = useShape("browse");
 
-  // Real shelves are the only live data on the landing, so they load only once the
-  // section is about to scroll into view (or the visitor jumped straight to it).
   useEffect(() => {
     const node = ref.current;
     if (!node) return;

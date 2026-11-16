@@ -34,8 +34,6 @@ export default function AuthProvider({ children }) {
       return me;
     } catch (err) {
       setUser(null);
-      // Only a real "not signed in" answer clears the hint. A sleeping or unreachable
-      // server must not make a signed-in visitor look signed out on the next visit.
       if (err?.status === 401 || err?.status === 403) writeHint(false);
       return null;
     } finally {
@@ -51,8 +49,6 @@ export default function AuthProvider({ children }) {
   const signIn = useCallback(async (mode, credentials) => {
     const path = mode === "signup" ? "/auth/signup" : "/auth/login";
     await api(path, { method: "POST", body: credentials });
-    // The account call succeeded; make sure the session cookie actually stuck before
-    // sending the visitor on, otherwise they would land on the landing page signed out.
     const me = await refresh();
     if (!me) {
       throw Object.assign(new Error("You are signed in, but this browser did not keep the session. Allow cookies for this site and try again."), { status: 0 });

@@ -54,9 +54,6 @@ export default function MovieCard({ movie, kind = "movie", onOpen, state, classN
   );
 }
 
-// The case never opens onto an empty tray: a disc printed with the cover art (already
-// loaded for the cover itself) is always there, and the real disc art fades in over it
-// once it has downloaded.
 function Disc({ art, discArt }) {
   const [loaded, setLoaded] = useState(false);
   const watch = useCallback((img) => {

@@ -39,7 +39,6 @@ export default function FriendsPage() {
     if (me) load();
   }, [me, load]);
 
-  // Remember the page's shape so the next skeleton has the same cards and rows.
   useEffect(() => {
     if (!data || !me) return;
     const taken = new Set(

@@ -1,6 +1,3 @@
-// Static showcase for the landing page. Covers live in /public/landing so the page
-// renders instantly without waking the API. Regenerate both together if you change them.
-
 export const LANDING_WALL = [
   {
     "_id": "movie-spirited-away",

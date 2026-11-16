@@ -94,8 +94,6 @@ export default function ShelfView({ userId }) {
 
   useEffect(() => () => clearTimeout(openTimer.current), []);
 
-  // Remember what this shelf looked like on first paint (movies tab, collapsed) so the
-  // next visit's skeleton draws the same number of slots and rows.
   useEffect(() => {
     const data = shelf || locked;
     if (!data || current.current !== ownerId) return;
@@ -103,7 +101,6 @@ export default function ShelfView({ userId }) {
     let shape = { name: data.owner.name, own: isOwner, locked: Boolean(locked) };
     if (shelf) {
       const total = shelf.movie.myShelf.length + shelf.movie.recommended.length;
-      // Every open shelf ends in a tile: add (owner), recommend (friend) or locked (anyone else).
       const limit = PREVIEW_SLOTS - 1;
       shape = { ...shape, slots: Math.min(total, limit) + 1, more: total > limit };
     }
@@ -174,8 +171,6 @@ export default function ShelfView({ userId }) {
     return me && id === me._id ? "/" : `/shelf/${id}`;
   }
 
-  // Lives in the profile header, next to the name it is about. The locked view has its
-  // own prompt over the shelf, so it does not get a second one here.
   const friendAction = !isOwner && !locked && relation?.status !== "accepted" && (
     <FriendAction
       name={owner.name}
@@ -478,7 +473,6 @@ function LockedPrompt({ name, relation, signedIn, busy, onRequest }) {
   );
 }
 
-// What the locked tile at the end of a non-friend's shelf says: why you can't recommend yet.
 function lockedTileLabel(name, relation, signedIn) {
   if (!signedIn) return `Sign in and add ${name} to recommend`;
   if (relation?.status === "pending" && relation.direction === "sent") return `Recommend once ${name} accepts`;
@@ -486,7 +480,6 @@ function lockedTileLabel(name, relation, signedIn) {
   return `Add ${name} as a friend to recommend`;
 }
 
-// The friend step as a profile action. Why it matters is told on the shelf, by the locked tile.
 function FriendAction({ name, relation, signedIn, busy, onRequest }) {
   let action = (
     <button type="button" className="btn btn-small" onClick={onRequest} disabled={busy}>

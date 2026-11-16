@@ -1,12 +1,7 @@
-// Remembers the last rendered shape of a page (how many items, rows, people) so its
-// skeleton can draw the same layout on the next visit instead of guessing.
-// Stored per browser only; a missing or blocked storage just means a default skeleton.
-
 import { useLayoutEffect, useState } from "react";
 
 const PREFIX = "yourshelf:shape:";
 
-// Reads after mount (before paint) so server and client render the same first frame.
 export function useShape(key) {
   const [shape, setShape] = useState(null);
 

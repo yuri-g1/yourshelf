@@ -1,6 +1,3 @@
-// Sends visitors back to the page they were on after signing in or up.
-
-// Only same-site paths are allowed, so a crafted link cannot bounce people elsewhere.
 export function safeNext(raw) {
   if (typeof raw !== "string" || !raw.startsWith("/") || raw.startsWith("//") || raw.includes("\\")) return "/";
   if (raw.startsWith("/login") || raw.startsWith("/signup")) return "/";

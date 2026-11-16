@@ -18,7 +18,6 @@ const HINTS = {
   password: `At least ${MIN_PASSWORD} characters`,
 };
 
-// Same rules the API enforces, checked here so people see problems before submitting.
 function validate(isSignup, form) {
   const errors = {};
 
@@ -34,7 +33,6 @@ function validate(isSignup, form) {
   return errors;
 }
 
-// Puts a server answer next to the field it is about, instead of at the bottom of the form.
 function fieldForServerError(isSignup, err) {
   if (err.offline || err.status === 429) return null;
   const message = err.message.toLowerCase();
@@ -54,8 +52,6 @@ export default function AuthForm({ mode }) {
   const [touched, setTouched] = useState({});
   const [serverErrors, setServerErrors] = useState({});
   const [formError, setFormError] = useState(null);
-  // Wrong username/email or password: we cannot tell which one, so both fields are marked
-  // and the message is shown once, under the password.
   const [credentialsError, setCredentialsError] = useState(null);
   const [notice, setNotice] = useState("");
   const [saving, setSaving] = useState(false);
@@ -63,7 +59,11 @@ export default function AuthForm({ mode }) {
   const [capsLock, setCapsLock] = useState(false);
   const [next, setNext] = useState("/");
   const slow = useSlow(saving);
-  const refs = { name: useRef(null), email: useRef(null), login: useRef(null), password: useRef(null) };
+  const nameRef = useRef(null);
+  const emailRef = useRef(null);
+  const loginRef = useRef(null);
+  const passwordRef = useRef(null);
+  const refs = { name: nameRef, email: emailRef, login: loginRef, password: passwordRef };
 
   const clientErrors = validate(isSignup, form);
   const errorFor = (field) =>
@@ -83,12 +83,10 @@ export default function AuthForm({ mode }) {
         sessionStorage.removeItem(PREFILL_KEY);
         if (email) {
           setForm((current) => ({ ...current, login: email }));
-          refs.password.current?.focus();
+          passwordRef.current?.focus();
         }
       } catch {}
     }
-    // refs are stable for the life of the form
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignup]);
 
   useEffect(() => {

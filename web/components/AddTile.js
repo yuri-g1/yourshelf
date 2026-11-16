@@ -15,8 +15,6 @@ export default function AddTile({ label, source, kind = "movie", onClick, locked
     </>
   );
 
-  // Locked: the slot where a recommendation would go, saying what unlocks it. The action
-  // itself lives in the profile header, so this one is not a second button.
   if (locked) return <div className="movie add-tile is-locked">{slot}</div>;
 
   return (
