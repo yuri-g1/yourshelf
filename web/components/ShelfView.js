@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { GlobeHemisphereWest, LockSimple } from "@phosphor-icons/react";
+import { Check, GlobeHemisphereWest, LockSimple, UserPlus } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import AddTile from "@/components/AddTile";
 import Bookcase from "@/components/Bookcase";
@@ -103,9 +103,9 @@ export default function ShelfView({ userId }) {
     let shape = { name: data.owner.name, own: isOwner, locked: Boolean(locked) };
     if (shelf) {
       const total = shelf.movie.myShelf.length + shelf.movie.recommended.length;
-      const hasAdd = isOwner || relation?.status === "accepted";
-      const limit = hasAdd ? PREVIEW_SLOTS - 1 : PREVIEW_SLOTS;
-      shape = { ...shape, slots: Math.min(total, limit) + (hasAdd ? 1 : 0), more: total > limit };
+      // Every open shelf ends in a tile: add (owner), recommend (friend) or locked (anyone else).
+      const limit = PREVIEW_SLOTS - 1;
+      shape = { ...shape, slots: Math.min(total, limit) + 1, more: total > limit };
     }
 
     rememberShape(`shelf:${ownerId}`, shape);
@@ -174,8 +174,10 @@ export default function ShelfView({ userId }) {
     return me && id === me._id ? "/" : `/shelf/${id}`;
   }
 
-  const friendCallout = !isOwner && relation?.status !== "accepted" && (
-    <FriendCallout
+  // Lives in the profile header, next to the name it is about. The locked view has its
+  // own prompt over the shelf, so it does not get a second one here.
+  const friendAction = !isOwner && !locked && relation?.status !== "accepted" && (
+    <FriendAction
       name={owner.name}
       relation={relation}
       signedIn={isSignedIn}
@@ -213,6 +215,7 @@ export default function ShelfView({ userId }) {
           {counts || <p className="profile-meta">Only {owner.name}'s friends can see this shelf.</p>}
         </div>
       </div>
+      {friendAction}
     </div>
   );
 
@@ -299,7 +302,7 @@ export default function ShelfView({ userId }) {
   const addTile =
     (isOwner && { label: `Add a ${config.noun}` }) ||
     (canRecommend && { label: `Recommend to ${owner.name}` }) ||
-    null;
+    { label: lockedTileLabel(owner.name, relation, isSignedIn), locked: true };
   const limit = addTile ? PREVIEW_SLOTS - 1 : PREVIEW_SLOTS;
   const visible = expanded ? items : items.slice(0, limit);
 
@@ -350,6 +353,7 @@ export default function ShelfView({ userId }) {
             label={addTile.label}
             source={config.source}
             kind={kind}
+            locked={addTile.locked}
             onClick={() => setAdding(true)}
           />
         )}
@@ -374,8 +378,6 @@ export default function ShelfView({ userId }) {
 
       <div className="reveal reveal-2">
         {library}
-
-        {friendCallout && <div style={{ marginTop: 40 }}>{friendCallout}</div>}
       </div>
 
       <Dialog open={adding} onClose={() => setAdding(false)} labelledBy="add-title" className="add-dialog">
@@ -476,54 +478,45 @@ function LockedPrompt({ name, relation, signedIn, busy, onRequest }) {
   );
 }
 
-function FriendCallout({ name, relation, signedIn, busy, onRequest }) {
-  if (!signedIn) {
-    return (
-      <div className="empty">
-        <strong>Want to recommend something to {name}?</strong>
-        <span>Sign in and send a friend request.</span>
-        <div>
-          <Link href={authHref("login", window.location.pathname)} className="btn btn-small">
-            Sign in
-          </Link>
-        </div>
-      </div>
-    );
-  }
+// What the locked tile at the end of a non-friend's shelf says: why you can't recommend yet.
+function lockedTileLabel(name, relation, signedIn) {
+  if (!signedIn) return `Sign in and add ${name} to recommend`;
+  if (relation?.status === "pending" && relation.direction === "sent") return `Recommend once ${name} accepts`;
+  if (relation?.status === "pending") return `Accept ${name} to recommend`;
+  return `Add ${name} as a friend to recommend`;
+}
 
-  if (relation?.status === "pending" && relation.direction === "sent") {
-    return (
-      <div className="empty">
-        <strong>Request sent</strong>
-        <span>Waiting for {name} to answer.</span>
-      </div>
-    );
-  }
-
-  if (relation?.status === "pending") {
-    return (
-      <div className="empty">
-        <strong>{name} sent you a friend request</strong>
-        <div>
-          <Link href="/friends" className="btn btn-small btn-soft">
-            Answer request
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="empty">
-      <strong>You are not friends yet</strong>
-      <span>
-        Become friends with {name} to recommend something for their shelf.
-      </span>
-      <div>
-        <button className="btn btn-small" onClick={onRequest} disabled={busy}>
-          {busy ? "Sending..." : "Add friend"}
-        </button>
-      </div>
-    </div>
+// The friend step as a profile action. Why it matters is told on the shelf, by the locked tile.
+function FriendAction({ name, relation, signedIn, busy, onRequest }) {
+  let action = (
+    <button type="button" className="btn btn-small" onClick={onRequest} disabled={busy}>
+      <UserPlus size={18} weight="bold" aria-hidden="true" />
+      {busy ? "Sending..." : "Add friend"}
+    </button>
   );
+
+  if (!signedIn) {
+    action = (
+      <Link href={authHref("login", window.location.pathname)} className="btn btn-small">
+        <UserPlus size={18} weight="bold" aria-hidden="true" />
+        Add friend
+      </Link>
+    );
+  } else if (relation?.status === "pending" && relation.direction === "sent") {
+    action = (
+      <span className="status">
+        <Check size={16} weight="bold" aria-hidden="true" />
+        Request sent
+      </span>
+    );
+  } else if (relation?.status === "pending") {
+    action = (
+      <Link href="/friends" className="btn btn-small">
+        <UserPlus size={18} weight="bold" aria-hidden="true" />
+        Answer request
+      </Link>
+    );
+  }
+
+  return <div className="profile-action">{action}</div>;
 }

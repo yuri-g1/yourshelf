@@ -409,6 +409,16 @@ textarea {
   color: var(--muted);
 }
 
+/* Add friend / request sent, on the right of the header. */
+.profile-action {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.profile-action .status {
+  gap: 6px;
+}
+
 .status {
   display: inline-flex;
   align-items: center;
@@ -629,7 +639,10 @@ textarea {
   }
 }
 
+/* The person takes whatever room the buttons leave and truncates, so a wider label like
+   "Sending..." squeezes the name instead of wrapping the button onto its own line. */
 .row-person {
+  flex: 1 1 0;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -648,6 +661,13 @@ textarea {
 .row-actions {
   display: flex;
   gap: 8px;
+}
+
+.row-item > .btn,
+.row-item > .tag,
+.row-actions {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .highlight {
@@ -2602,6 +2622,26 @@ button.movie:focus-visible .poster {
 
 .add-tile:active .add-plus {
   transform: scale(0.96);
+}
+
+/* A closed slot, not a button: quieter mark, no hover or press feedback. */
+.add-tile.is-locked {
+  cursor: default;
+}
+
+.bookcase .add-tile.is-locked:hover .case {
+  transform: none;
+}
+
+.add-tile.is-locked .add-plus {
+  background: rgb(255 255 255 / 0.12);
+  color: rgb(246 239 232 / 0.8);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.18);
+  transform: none;
+}
+
+.add-tile.is-locked .add-label {
+  color: rgb(246 239 232 / 0.7);
 }
 
 .bookcase .movie:hover .poster {
