@@ -2174,6 +2174,24 @@ button.movie:focus-visible .poster {
   width: 90%;
 }
 
+/* Printed fallback disc and real disc art share one spot; the art fades in over it. */
+.case-inside > .disc {
+  grid-area: 1 / 1;
+  transition: transform 1.2s var(--ease), opacity 0.35s var(--ease);
+}
+
+.case-inside > .disc-art {
+  opacity: 0;
+}
+
+.case-inside > .disc-art.is-loaded {
+  opacity: 1;
+}
+
+.case-inside > .disc.is-covered {
+  opacity: 0;
+}
+
 .disc::before {
   content: "";
   position: absolute;

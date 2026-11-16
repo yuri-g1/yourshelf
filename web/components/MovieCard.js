@@ -1,3 +1,6 @@
+"use client";
+
+import { useCallback, useState } from "react";
 import Avatar from "@/components/Avatar";
 import Poster from "@/components/Poster";
 import { kindOf } from "@/lib/kinds";
@@ -24,10 +27,8 @@ export default function MovieCard({ movie, kind = "movie", onOpen, state, classN
             <span className="book-page" />
           ) : platform?.family === "switch" ? (
             <span className="cartridge" style={art ? { "--art": `url("${art}")` } : undefined} />
-          ) : movie.discArt ? (
-            <img className="disc disc-art" src={movie.discArt} alt="" loading="lazy" />
           ) : (
-            <span className="disc" style={art ? { "--art": `url("${art}")` } : undefined} />
+            <Disc art={art} discArt={movie.discArt} />
           )}
         </span>
         <span className="cover">
@@ -50,5 +51,35 @@ export default function MovieCard({ movie, kind = "movie", onOpen, state, classN
       </span>
       <span className="shelf-ledge" aria-hidden="true" />
     </button>
+  );
+}
+
+// The case never opens onto an empty tray: a disc printed with the cover art (already
+// loaded for the cover itself) is always there, and the real disc art fades in over it
+// once it has downloaded.
+function Disc({ art, discArt }) {
+  const [loaded, setLoaded] = useState(false);
+  const watch = useCallback((img) => {
+    if (img?.complete && img.naturalWidth > 0) setLoaded(true);
+  }, []);
+
+  return (
+    <>
+      <span
+        className={`disc${loaded ? " is-covered" : ""}`}
+        style={art ? { "--art": `url("${art}")` } : undefined}
+      />
+      {discArt && (
+        <img
+          ref={watch}
+          className={`disc disc-art${loaded ? " is-loaded" : ""}`}
+          src={discArt}
+          alt=""
+          decoding="async"
+          fetchPriority="low"
+          onLoad={() => setLoaded(true)}
+        />
+      )}
+    </>
   );
 }
