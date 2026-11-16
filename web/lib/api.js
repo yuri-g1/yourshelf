@@ -8,21 +8,39 @@ export class ApiError extends Error {
   }
 }
 
+const OFFLINE_MESSAGE = "We can't reach the server right now. Check your connection and try again in a moment.";
+
 export async function api(path, { method = "GET", body } = {}) {
-  const response = await fetch(`/api${path}`, {
-    method,
-    headers: body === undefined ? undefined : { "Content-Type": "application/json" },
-    body: body === undefined ? undefined : JSON.stringify(body),
-    credentials: "same-origin",
-  });
+  let response;
+  try {
+    response = await fetch(`/api${path}`, {
+      method,
+      headers: body === undefined ? undefined : { "Content-Type": "application/json" },
+      body: body === undefined ? undefined : JSON.stringify(body),
+      credentials: "same-origin",
+    });
+  } catch {
+    throw offline(0);
+  }
 
   if (response.status === 204) return null;
 
   const data = await response.json().catch(() => null);
 
-  if (!response.ok) throw new ApiError(response.status, data);
+  if (!response.ok) {
+    // The API always answers in JSON. A 5xx without a JSON body comes from the proxy,
+    // which means the API itself is down or unreachable, not that the request was wrong.
+    if (response.status >= 500 && !data?.error) throw offline(response.status);
+    throw new ApiError(response.status, data);
+  }
 
   return data;
+}
+
+function offline(status) {
+  const error = new ApiError(status, { error: OFFLINE_MESSAGE });
+  error.offline = true;
+  return error;
 }
 
 export function useApi() {

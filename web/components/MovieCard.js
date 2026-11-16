@@ -5,7 +5,7 @@ import { caseFor } from "@/lib/platforms";
 
 export default function MovieCard({ movie, kind = "movie", onOpen, state, className = "" }) {
   const recommender = movie.recommendedBy;
-  const art = movie.posterPath ? kindOf(kind).image(movie.posterPath) : null;
+  const art = movie.cover || (movie.posterPath ? kindOf(kind).image(movie.posterPath) : null);
   const platform = kind === "game" ? caseFor(movie.platform) : kind === "movie" ? { family: "black" } : null;
   const plastic =
     (platform ? ` plastic-${platform.family}` : "") + (platform?.logo ? ` label-${platform.label}` : "");
@@ -39,7 +39,7 @@ export default function MovieCard({ movie, kind = "movie", onOpen, state, classN
           {platform?.logo && platform.label === "corner" && (
             <img className={`cover-corner corner-${platform.mark}`} src={platform.logo} alt="" aria-hidden="true" />
           )}
-          <Poster title={movie.title} posterPath={movie.posterPath} kind={kind} />
+          <Poster title={movie.title} posterPath={movie.posterPath} src={movie.cover} kind={kind} />
           {recommender && (
             <span className="cover-band" aria-hidden="true">
               <span>Recommended</span>

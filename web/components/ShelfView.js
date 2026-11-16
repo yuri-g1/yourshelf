@@ -14,6 +14,8 @@ import MovieForm from "@/components/MovieForm";
 import { ShelfSkeleton } from "@/components/Skeletons";
 import { useAuth } from "@/components/AuthProvider";
 import { useApi } from "@/lib/api";
+import { rememberShape } from "@/lib/shape";
+import { authHref } from "@/lib/next";
 import { KIND_LIST, kindOf } from "@/lib/kinds";
 
 const PREVIEW_SLOTS = 12;
@@ -92,6 +94,24 @@ export default function ShelfView({ userId }) {
 
   useEffect(() => () => clearTimeout(openTimer.current), []);
 
+  // Remember what this shelf looked like on first paint (movies tab, collapsed) so the
+  // next visit's skeleton draws the same number of slots and rows.
+  useEffect(() => {
+    const data = shelf || locked;
+    if (!data || current.current !== ownerId) return;
+
+    let shape = { name: data.owner.name, own: isOwner, locked: Boolean(locked) };
+    if (shelf) {
+      const total = shelf.movie.myShelf.length + shelf.movie.recommended.length;
+      const hasAdd = isOwner || relation?.status === "accepted";
+      const limit = hasAdd ? PREVIEW_SLOTS - 1 : PREVIEW_SLOTS;
+      shape = { ...shape, slots: Math.min(total, limit) + (hasAdd ? 1 : 0), more: total > limit };
+    }
+
+    rememberShape(`shelf:${ownerId}`, shape);
+    if (isOwner) rememberShape("shelf:me", shape);
+  }, [shelf, locked, relation, isOwner, ownerId]);
+
   function openItem(movie) {
     if (opening) return;
     clearTimeout(openTimer.current);
@@ -126,7 +146,7 @@ export default function ShelfView({ userId }) {
   }
 
   if (!ready || (!shelf && !locked && !error)) {
-    return <ShelfSkeleton />;
+    return <ShelfSkeleton shapeKey={userId ? `shelf:${userId}` : "shelf:me"} />;
   }
 
   if (error && !shelf && !locked) {
@@ -431,7 +451,7 @@ function LockedPrompt({ name, relation, signedIn, busy, onRequest }) {
   if (!signedIn) {
     title = `Sign in and add ${name} to see their shelf`;
     action = (
-      <Link href="/login" className="btn">
+      <Link href={authHref("login", window.location.pathname)} className="btn">
         Sign in
       </Link>
     );
@@ -463,7 +483,7 @@ function FriendCallout({ name, relation, signedIn, busy, onRequest }) {
         <strong>Want to recommend something to {name}?</strong>
         <span>Sign in and send a friend request.</span>
         <div>
-          <Link href="/login" className="btn btn-small">
+          <Link href={authHref("login", window.location.pathname)} className="btn btn-small">
             Sign in
           </Link>
         </div>

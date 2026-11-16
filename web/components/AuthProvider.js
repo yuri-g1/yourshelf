@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { forgetShapes } from "@/lib/shape";
 
 const AuthContext = createContext(null);
 const HINT_KEY = "yourshelf:signed-in";
@@ -30,9 +31,13 @@ export default function AuthProvider({ children }) {
       const me = await api("/me");
       setUser(me);
       writeHint(true);
-    } catch {
+      return me;
+    } catch (err) {
       setUser(null);
-      writeHint(false);
+      // Only a real "not signed in" answer clears the hint. A sleeping or unreachable
+      // server must not make a signed-in visitor look signed out on the next visit.
+      if (err?.status === 401 || err?.status === 403) writeHint(false);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -46,17 +51,25 @@ export default function AuthProvider({ children }) {
   const signIn = useCallback(async (mode, credentials) => {
     const path = mode === "signup" ? "/auth/signup" : "/auth/login";
     await api(path, { method: "POST", body: credentials });
-    await refresh();
+    // The account call succeeded; make sure the session cookie actually stuck before
+    // sending the visitor on, otherwise they would land on the landing page signed out.
+    const me = await refresh();
+    if (!me) {
+      throw Object.assign(new Error("You are signed in, but this browser did not keep the session. Allow cookies for this site and try again."), { status: 0 });
+    }
+    return me;
   }, [refresh]);
 
   const signOut = useCallback(async () => {
     await api("/auth/logout", { method: "POST" }).catch(() => null);
     writeHint(false);
+    forgetShapes();
     setUser(null);
   }, []);
 
   const clearUser = useCallback(() => {
     writeHint(false);
+    forgetShapes();
     setUser(null);
   }, []);
 

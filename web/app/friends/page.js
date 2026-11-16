@@ -8,6 +8,8 @@ import PersonCard, { countsLine, totalOf } from "@/components/PersonCard";
 import { FriendsSkeleton } from "@/components/Skeletons";
 import { useAuth } from "@/components/AuthProvider";
 import { useApi } from "@/lib/api";
+import { rememberShape } from "@/lib/shape";
+import { authHref } from "@/lib/next";
 
 const SUGGESTIONS = 5;
 
@@ -20,6 +22,7 @@ export default function FriendsPage() {
   const [query, setQuery] = useState("");
 
   const load = useCallback(async () => {
+    setError("");
     try {
       const [requests, relationships, users] = await Promise.all([
         api("/friendship"),
@@ -35,6 +38,22 @@ export default function FriendsPage() {
   useEffect(() => {
     if (me) load();
   }, [me, load]);
+
+  // Remember the page's shape so the next skeleton has the same cards and rows.
+  useEffect(() => {
+    if (!data || !me) return;
+    const taken = new Set(
+      data.relationships.filter((item) => item.status !== "denied").map((item) => item.user?._id),
+    );
+    rememberShape("friends", {
+      requests: data.requests.filter((item) => item.from).length,
+      friends: data.relationships.filter((item) => item.status === "accepted" && item.user).length,
+      suggestions: Math.min(
+        SUGGESTIONS,
+        data.users.filter((user) => user._id !== me._id && !taken.has(user._id)).length,
+      ),
+    });
+  }, [data, me]);
 
   async function run(key, action) {
     setError("");
@@ -76,7 +95,7 @@ export default function FriendsPage() {
           <strong>Sign in to see your friends</strong>
           <span>Your friends list, requests and new people to add all live here.</span>
           <div>
-            <Link href="/login" className="btn btn-small">
+            <Link href={authHref("login", "/friends")} className="btn btn-small">
               Sign in
             </Link>
           </div>
@@ -111,7 +130,7 @@ export default function FriendsPage() {
   const term = query.trim().toLowerCase();
   const strangers = data.users
     .filter((user) => user._id !== me._id && !taken.has(user._id))
-    .filter((user) => user.name.includes(term))
+    .filter((user) => user.name.toLowerCase().includes(term))
     .sort((a, b) => totalOf(b.preview) - totalOf(a.preview));
   const found = term ? strangers : strangers.slice(0, SUGGESTIONS);
 

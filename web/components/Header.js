@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { authHref } from "@/lib/next";
 import { useEffect, useRef, useState } from "react";
 import { List, X } from "@phosphor-icons/react";
 import Avatar from "@/components/Avatar";
@@ -191,10 +192,10 @@ export default function Header() {
                   <UserMenu user={user} onSignOut={handleSignOut} onDelete={() => setDeleting(true)} />
                 ) : (
                   <div className="header-auth">
-                    <Link href="/login" className="btn btn-small btn-ghost">
+                    <Link href={authHref("login", pathname)} className="btn btn-small btn-ghost">
                       Sign in
                     </Link>
-                    <Link href="/signup" className="btn btn-small">
+                    <Link href={authHref("signup", pathname)} className="btn btn-small">
                       Sign up
                     </Link>
                   </div>

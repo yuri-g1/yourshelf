@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import Bookcase from "@/components/Bookcase";
 import MovieCard from "@/components/MovieCard";
-import { ShelfSlots } from "@/components/Skeletons";
 import { kindOf } from "@/lib/kinds";
 
 export default function RecommendationStory({ note, onOpen }) {
@@ -12,7 +11,7 @@ export default function RecommendationStory({ note, onOpen }) {
 
   useEffect(() => {
     const node = ref.current;
-    if (!node || !note) return;
+    if (!node) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -26,12 +25,10 @@ export default function RecommendationStory({ note, onOpen }) {
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, [note]);
+  }, []);
 
-  if (note === false) return null;
-
-  const config = kindOf(note?.kind);
-  const items = note ? [note.neighbors[0], note, note.neighbors[1]].filter(Boolean) : [];
+  const config = kindOf(note.kind);
+  const items = [note.neighbors[0], note, note.neighbors[1]].filter(Boolean);
 
   return (
     <section ref={ref} className={`story${seen ? " is-seen" : ""}`} aria-labelledby="story-title">
@@ -44,26 +41,20 @@ export default function RecommendationStory({ note, onOpen }) {
       </div>
 
       <div className="story-shelf">
-        <Bookcase kind={note?.kind || "movie"} square={config.square}>
-          {note ? (
-            items.map((item) => (
-              <MovieCard
-                key={item._id}
-                movie={item}
-                kind={note.kind}
-                className={item === note ? "story-landing" : ""}
-                onOpen={() => onOpen(note.owner._id)}
-              />
-            ))
-          ) : (
-            <ShelfSlots count={3} />
-          )}
+        <Bookcase kind={note.kind} square={config.square}>
+          {items.map((item) => (
+            <MovieCard
+              key={item._id}
+              movie={item}
+              kind={note.kind}
+              className={item === note ? "story-landing" : ""}
+              onOpen={onOpen}
+            />
+          ))}
         </Bookcase>
-        {note && (
-          <p className="story-caption">
-            {note.recommendedBy.name} recommended the middle one to {note.owner.name}
-          </p>
-        )}
+        <p className="story-caption">
+          {note.recommendedBy.name} recommended the middle one to {note.owner.name}
+        </p>
       </div>
     </section>
   );

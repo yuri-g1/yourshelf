@@ -1,80 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Bookcase from "@/components/Bookcase";
 import MovieCard from "@/components/MovieCard";
-import { totalOf } from "@/components/PersonCard";
 import ShelfBrowser from "@/components/ShelfBrowser";
 import RecommendationStory from "@/components/RecommendationStory";
-import { ShelfSlots, SlowNote } from "@/components/Skeletons";
-import { api } from "@/lib/api";
-import { caseFor } from "@/lib/platforms";
+import { LANDING_STORY, LANDING_WALL } from "@/lib/landing";
 
-const KINDS = ["movie", "game", "album"];
-const PER_SHELF = 10;
-const MIXED = 20;
-
-function mix(media, owner) {
-  const recommended = media.recommended.slice(0, 2);
-  const items = [...media.myShelf];
-
-  recommended.forEach((item, index) => items.splice(Math.min(1 + index * 3, items.length), 0, item));
-  return items.map((item) => ({ ...item, owner }));
-}
-
-function shelfFor(kind, shelves) {
-  const ranked = [...shelves].sort(
-    (a, b) =>
-      b[kind].myShelf.length + b[kind].recommended.length -
-      (a[kind].myShelf.length + a[kind].recommended.length),
-  );
-  const all = ranked.flatMap((shelf) => mix(shelf[kind], shelf.owner));
-  const items = (kind === "game" ? byConsole(all) : all)
-    .slice(0, PER_SHELF)
-    .map((item) => ({ ...item, kind }));
-
-  return { kind, items };
-}
-
-function byConsole(games) {
-  const families = new Map();
-
-  games.forEach((game) => {
-    const family = caseFor(game.platform).family;
-    if (!families.has(family)) families.set(family, []);
-    families.get(family).push(game);
-  });
-
-  const plain = families.get("black") || [];
-  families.delete("black");
-
-  const groups = [...families.values()];
-  const ordered = [];
-  for (let index = 0; groups.some((group) => group[index]); index += 1) {
-    groups.forEach((group) => group[index] && ordered.push(group[index]));
-  }
-
-  return [...ordered, ...plain];
-}
-
-function mixedShelf(byKind) {
-  const items = [];
-
-  for (let index = 0; items.length < MIXED && byKind.some((shelf) => shelf.items[index]); index += 1) {
-    byKind.forEach((shelf) => shelf.items[index] && items.push(shelf.items[index]));
-  }
-
-  return items.slice(0, MIXED);
+function browse() {
+  document.getElementById("shelves")?.scrollIntoView({ behavior: "smooth" });
 }
 
 export default function Landing() {
-  const router = useRouter();
-  const [people, setPeople] = useState(null);
-  const [wall, setWall] = useState(null);
-  const [note, setNote] = useState(null);
-  const [failed, setFailed] = useState(false);
   const [closed, setClosed] = useState(null);
 
   useEffect(() => {
@@ -85,46 +23,6 @@ export default function Landing() {
     measure();
     observer.observe(root);
     return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    let alive = true;
-
-    api("/users")
-      .then(async (list) => {
-        const open = list
-          .filter((user) => user.visibility === "public" && totalOf(user.preview) > 0)
-          .sort((a, b) => totalOf(b.preview) - totalOf(a.preview));
-
-        if (!alive) return;
-        setPeople(open);
-
-        const shelves = (
-          await Promise.all(open.map((user) => api(`/shelf/${user._id}`).catch(() => null)))
-        ).filter(Boolean);
-        if (!alive) return;
-
-        const byKind = KINDS.map((kind) => shelfFor(kind, shelves)).filter((shelf) => shelf.items.length > 0);
-        setWall(mixedShelf(byKind));
-
-        const found = shelves
-          .flatMap((shelf) =>
-            KINDS.flatMap((kind) => shelf[kind].recommended.map((pick) => ({ ...pick, kind, owner: shelf.owner }))),
-          )
-          .find((pick) => pick.recommendationText && pick.recommendedBy);
-        if (!found) return setNote(false);
-        const home = shelves.find((shelf) => shelf.owner._id === found.owner._id);
-        setNote({ ...found, neighbors: home[found.kind].myShelf.slice(0, 2) });
-      })
-      .catch(() => {
-        if (!alive) return;
-        setFailed(true);
-        setNote(false);
-      });
-
-    return () => {
-      alive = false;
-    };
   }, []);
 
   return (
@@ -146,34 +44,27 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="landing-wall reveal reveal-2" aria-label="Shelves from people on yourshelf">
+      <section className="landing-wall reveal reveal-2" aria-label="A shelf of movies, games and albums">
         <Bookcase rows={1} className="bookcase-bleed bookcase-open">
-          {wall ? (
-            wall.map((item) => (
-              <MovieCard
-                key={item._id}
-                movie={item}
-                kind={item.kind}
-                state={closed === item._id ? "closed" : undefined}
-                onOpen={() => {
-                  const touch = !window.matchMedia("(hover: hover)").matches;
-                  if (touch && closed !== item._id) return setClosed(item._id);
-                  router.push(`/shelf/${item.owner._id}`);
-                }}
-              />
-            ))
-          ) : (
-            <ShelfSlots count={failed ? 0 : MIXED} />
-          )}
+          {LANDING_WALL.map((item) => (
+            <MovieCard
+              key={item._id}
+              movie={item}
+              kind={item.kind}
+              state={closed === item._id ? "closed" : undefined}
+              onOpen={() => {
+                const touch = !window.matchMedia("(hover: hover)").matches;
+                if (touch && closed !== item._id) return setClosed(item._id);
+                browse();
+              }}
+            />
+          ))}
         </Bookcase>
-        {!wall && !failed && <SlowNote />}
       </section>
 
-      <RecommendationStory note={note} onOpen={(id) => router.push(`/shelf/${id}`)} />
+      <RecommendationStory note={LANDING_STORY} onOpen={browse} />
 
-      <ShelfBrowser people={people} failed={failed} settled={failed || (wall !== null && note !== null)} />
-
+      <ShelfBrowser />
     </div>
   );
 }
-

@@ -1,14 +1,15 @@
 import { kindOf } from "@/lib/kinds";
 import { toneOf } from "@/lib/tone";
 
-export default function Poster({ title, posterPath, kind }) {
+export default function Poster({ title, posterPath, src, kind }) {
   const shape = kindOf(kind).square ? " poster-square" : "";
+  const image = src || (posterPath ? kindOf(kind).image(posterPath) : null);
 
-  if (posterPath) {
+  if (image) {
     return (
       <img
         className={`poster poster-image${shape}`}
-        src={kindOf(kind).image(posterPath)}
+        src={image}
         alt={`${kind && kind !== "movie" ? "Cover" : "Poster"} of ${title}`}
         loading="lazy"
       />

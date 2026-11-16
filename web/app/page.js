@@ -9,7 +9,7 @@ export default function HomePage() {
   const { user, loading, hint } = useAuth();
 
   if (loading) {
-    if (hint === "1") return <ShelfSkeleton />;
+    if (hint === "1") return <ShelfSkeleton shapeKey="shelf:me" />;
     if (hint === null) return null;
   }
 

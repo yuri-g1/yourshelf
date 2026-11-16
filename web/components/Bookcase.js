@@ -45,7 +45,8 @@ export default function Bookcase({
     });
   });
 
-  const spare = !columns ? 0 : count === 0 ? columns : (columns - (count % columns)) % columns;
+  // An empty bookcase only draws a blank row when it has a message to show on it.
+  const spare = !columns ? 0 : count === 0 ? (empty ? columns : 0) : (columns - (count % columns)) % columns;
 
   return (
     <div className={`bookcase${crown ? " has-switch" : ""} ${className}`} {...rest}>
