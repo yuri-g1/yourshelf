@@ -30,11 +30,12 @@ async function getMovies(externalIds) {
 
 async function getAlbums(externalIds) {
   const albums = await deezer.getAlbums(externalIds);
+  const discs = await albumart.discsFor([...albums.keys()]);
 
   for (const [id, album] of albums) {
-    const discArt = albumart.cachedDisc(album.barcode);
-    if (!discArt) albumart.warm(album.barcode);
-    albums.set(id, { ...album, discArt });
+    const record = discs.get(id);
+    if (!record || albumart.isStale(record)) albumart.warm(album);
+    albums.set(id, { ...album, discArt: record?.discArt || null, discCrop: record?.crop || null });
   }
 
   return albums;
@@ -125,6 +126,7 @@ async function withLiveData(catalog, items) {
       creator: fresh.creator || item.creator,
       platform: fresh.platform || item.platform,
       discArt: fresh.discArt || null,
+      discCrop: fresh.discCrop || null,
       titleLogo: fresh.titleLogo || null,
     };
   });

@@ -28,7 +28,7 @@ export default function MovieCard({ movie, kind = "movie", onOpen, state, classN
           ) : platform?.family === "switch" ? (
             <span className="cartridge" style={art ? { "--art": `url("${art}")` } : undefined} />
           ) : (
-            <Disc key={movie.discArt || "none"} art={art} discArt={movie.discArt} />
+            <Disc key={movie.discArt || "none"} art={art} discArt={movie.discArt} crop={movie.discCrop} />
           )}
         </span>
         <span className="cover">
@@ -62,7 +62,19 @@ export default function MovieCard({ movie, kind = "movie", onOpen, state, classN
 const SPIN_MS = 900;
 const DEG_PER_MS = 360 / SPIN_MS;
 
-function Disc({ art, discArt }) {
+function cropStyle(crop) {
+  const width = 100 / (2 * crop.rx);
+  const height = 100 / (2 * crop.ry);
+
+  return {
+    width: `${width}%`,
+    height: `${height}%`,
+    left: `${50 - crop.x * width}%`,
+    top: `${50 - crop.y * height}%`,
+  };
+}
+
+function Disc({ art, discArt, crop }) {
   const [state, setState] = useState(discArt ? "loading" : "none");
   const spin = useRef(null);
   const img = useRef(null);
@@ -107,6 +119,20 @@ function Disc({ art, discArt }) {
   }
 
   const blank = state === "loading";
+  const loaded = state === "loaded" ? " is-loaded" : "";
+  const image = (
+    <img
+      ref={img}
+      className={crop ? undefined : `disc disc-art${loaded}`}
+      style={crop ? cropStyle(crop) : undefined}
+      src={discArt}
+      alt=""
+      decoding="async"
+      fetchPriority="low"
+      onLoad={() => settle("loaded")}
+      onError={() => settle("failed")}
+    />
+  );
 
   return (
     <span className="disc-spin" ref={spin}>
@@ -114,18 +140,9 @@ function Disc({ art, discArt }) {
         className={`disc${blank ? " is-blank" : ""}${state === "loaded" ? " is-covered" : ""}`}
         style={art && !blank ? { "--art": `url("${art}")` } : undefined}
       />
-      {discArt && state !== "failed" && (
-        <img
-          ref={img}
-          className={`disc disc-art${state === "loaded" ? " is-loaded" : ""}`}
-          src={discArt}
-          alt=""
-          decoding="async"
-          fetchPriority="low"
-          onLoad={() => settle("loaded")}
-          onError={() => settle("failed")}
-        />
-      )}
+      {discArt &&
+        state !== "failed" &&
+        (crop ? <span className={`disc disc-art disc-scan${loaded}`}>{image}</span> : image)}
     </span>
   );
 }
