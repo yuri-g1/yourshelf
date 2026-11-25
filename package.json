@@ -1,7 +1,7 @@
 {
   "name": "yourshelf-api",
   "version": "1.0.0",
-  "description": "REST API for yourshelf: one shelf for the media you love, where friends can leave recommendations. Movies today, games and albums next.",
+  "description": "REST API for yourshelf: one shelf for the movies, games, books and albums you love, where friends can leave recommendations.",
   "main": "server.js",
   "scripts": {
     "dev": "node --watch --env-file-if-exists=.env server.js",
