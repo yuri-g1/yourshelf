@@ -40,7 +40,7 @@ export default function PersonCard({ user, preview = user.preview, action, foote
         <div className="person-posters" aria-hidden="true">
           {slots.map((item, index) =>
             item ? (
-              <Poster key={index} title={item.title} posterPath={item.posterPath} kind={item.kind} />
+              <Poster key={index} title={item.title} posterPath={item.posterPath} src={item.src} kind={item.kind} />
             ) : (
               <span key={index} className="person-posters-empty" />
             ),
