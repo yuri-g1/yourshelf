@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import Bookcase from "@/components/Bookcase";
 import MarkTrack from "@/components/MarkTrack";
 import MovieCard from "@/components/MovieCard";
@@ -45,66 +46,106 @@ function StatusLine({ data }) {
   );
 }
 
-function Podium({ item, kind, onOpen }) {
+function Spotlight({ item, kind, onOpen }) {
   const config = kindOf(kind);
 
   return (
-    <section className="trending-podium" aria-label={`Most added ${config.noun} this week`}>
-      <div className="trending-podium-case">
-        <Bookcase rows={1} kind={kind} square={config.square}>
-          <MovieCard movie={item} kind={kind} onOpen={onOpen} />
-        </Bookcase>
-      </div>
-      <div className="trending-podium-text">
-        <span className="trending-podium-rank" aria-hidden="true">
+    <section className="trending-hero" aria-label={`Most added ${config.noun} this week`}>
+      <div className="trending-hero-art">
+        <span className="trending-tile-rank trending-hero-rank" aria-hidden="true">
           1
         </span>
-        <p className="trending-podium-label">Most added {config.noun} this week</p>
+        <div className="trending-hero-case">
+          <Bookcase rows={1} kind={kind} square={config.square}>
+            <MovieCard movie={item} kind={kind} onOpen={onOpen} />
+          </Bookcase>
+        </div>
+      </div>
+      <div className="trending-hero-text">
+        <p className="trending-hero-badge">{shelvesLine(item.count)}</p>
         <h2>{item.title}</h2>
-        {item.creator && <p className="trending-podium-creator">by {item.creator}</p>}
-        <p className="trending-podium-count">{shelvesLine(item.count)}</p>
+        {item.creator && <p className="trending-hero-creator">{item.creator}</p>}
+        {item.desc && <p className="trending-hero-desc">{item.desc}</p>}
+        <div className="trending-hero-actions">
+          <button type="button" className="btn" onClick={() => onOpen(item)}>
+            See details
+          </button>
+        </div>
       </div>
     </section>
   );
 }
 
-function Ranking({ items, kind, onOpen }) {
+function Chart({ items, kind, onOpen }) {
+  const track = useRef(null);
+  const [edges, setEdges] = useState({ start: true, end: true });
+  const square = kindOf(kind).square;
+
+  const measure = useCallback(() => {
+    const node = track.current;
+    if (!node) return;
+    setEdges({
+      start: node.scrollLeft < 8,
+      end: node.scrollLeft + node.clientWidth > node.scrollWidth - 8,
+    });
+  }, []);
+
+  useEffect(() => {
+    const node = track.current;
+    if (!node) return;
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [measure, items]);
+
+  const nudge = (direction) => {
+    const node = track.current;
+    node?.scrollBy({ left: direction * node.clientWidth * 0.8, behavior: "smooth" });
+  };
+
   return (
-    <ol className="trending-ranking" start={2} style={{ "--rows": Math.ceil(items.length / 2) }}>
-      {items.map((item, index) => (
-        <li key={item.externalId}>
-          <button type="button" className="trending-row" onClick={() => onOpen(item)}>
-            <span className="trending-rank" aria-hidden="true">
-              {index + 2}
-            </span>
-            <span className="trending-row-poster">
-              <Poster title={item.title} posterPath={item.posterPath} kind={kind} />
-            </span>
-            <span className="trending-row-text">
-              <strong>{item.title}</strong>
-              {item.creator && <span>{item.creator}</span>}
-              <small>{shelvesLine(item.count)}</small>
-            </span>
+    <section className="trending-chart" aria-labelledby="chart-title">
+      <div className="trending-chart-head">
+        <h2 id="chart-title">More trending this week</h2>
+        <div className="trending-chart-nav">
+          <button type="button" className="icon-btn" onClick={() => nudge(-1)} disabled={edges.start} aria-label="Scroll left">
+            <CaretLeft size={18} weight="bold" />
           </button>
-        </li>
-      ))}
-    </ol>
+          <button type="button" className="icon-btn" onClick={() => nudge(1)} disabled={edges.end} aria-label="Scroll right">
+            <CaretRight size={18} weight="bold" />
+          </button>
+        </div>
+      </div>
+      <ol ref={track} className={`trending-track${square ? " trending-track-square" : ""}`} start={2} onScroll={measure}>
+        {items.map((item, index) => (
+          <li key={item.externalId} className="trending-tile" style={{ "--i": index }}>
+            <button type="button" className="trending-tile-button" onClick={() => onOpen(item)}>
+              <span className="trending-tile-art">
+                <span className="trending-tile-rank" aria-hidden="true">
+                  {index + 2}
+                </span>
+                <Poster title={item.title} posterPath={item.posterPath} kind={kind} />
+              </span>
+              <span className="trending-tile-text">
+                <strong>{item.title}</strong>
+                <span>{item.creator || shelvesLine(item.count)}</span>
+              </span>
+            </button>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 
 function TrendingSkeleton() {
   return (
     <div className="trending-skeleton" aria-busy="true" aria-label="Loading trending">
-      <div className="trending-podium">
-        <span className="skeleton trending-skeleton-case" />
-        <div className="trending-podium-text">
-          <span className="skeleton sk-title" />
-          <span className="skeleton sk-text" />
-        </div>
-      </div>
-      <div className="trending-ranking">
-        {Array.from({ length: 6 }, (_, index) => (
-          <span key={index} className="skeleton trending-skeleton-row" style={{ "--i": index }} />
+      <span className="skeleton trending-skeleton-hero" />
+      <div className="trending-skeleton-track">
+        {Array.from({ length: 5 }, (_, index) => (
+          <span key={index} className="skeleton trending-skeleton-tile" style={{ "--i": index }} />
         ))}
       </div>
     </div>
@@ -179,8 +220,8 @@ export default function TrendingPage() {
             </div>
           ) : (
             <div key={kind} className="trending-board reveal reveal-2">
-              <Podium item={items[0]} kind={kind} onOpen={setSelected} />
-              {items.length > 1 && <Ranking items={items.slice(1)} kind={kind} onOpen={setSelected} />}
+              <Spotlight item={items[0]} kind={kind} onOpen={setSelected} />
+              {items.length > 1 && <Chart items={items.slice(1)} kind={kind} onOpen={setSelected} />}
             </div>
           )}
         </>
